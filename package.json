@@ -1,0 +1,43 @@
+{
+  "name": "surrealize",
+  "version": "0.1.0",
+  "description": "Surrealize is a query builder and ORM for SurrealDB.",
+  "type": "module",
+  "dependencies": {
+    "cborkit": "^0.1.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@date-fns/utc": "^2.1.0",
+    "@standard-schema/spec": "^1.0.0",
+    "@std/semver": "npm:@jsr/std__semver@^1.0.5",
+    "@types/bun": "^1.2.10",
+    "arktype": "^2.1.20",
+    "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "license": "MIT",
+  "author": "Lukas Heizmann <lukas@heizmann.dev>",
+  "homepage": "https://github.com/surrealize/surrealize#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/surrealize/surrealize.git",
+    "directory": "packages/surrealize"
+  },
+  "bugs": {
+    "url": "https://github.com/surrealize/surrealize/issues"
+  },
+  "keywords": [
+    "surrealdb",
+    "typescript",
+    "orm",
+    "query",
+    "builder",
+    "database"
+  ]
+}
