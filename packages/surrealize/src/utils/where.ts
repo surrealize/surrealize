@@ -1,4 +1,4 @@
-import { type WhereCondition, eqs } from "../statements/common/where";
+import { type WhereCondition, eqs } from "../builder/utils/where";
 import { flattenObject } from "./object";
 
 /**

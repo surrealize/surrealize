@@ -1,4 +1,4 @@
-import type { WhereCondition } from "../statements/common/where";
+import type { WhereCondition } from "../builder/utils/where";
 import type { DurationLike } from "../type/duration";
 import type { TargetLike } from "../type/target";
 import type { DeepPartial } from "../utils/object";

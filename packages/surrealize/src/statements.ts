@@ -1,10 +1,10 @@
-import { CreateStatement } from "./statements/create";
-import { DeleteStatement } from "./statements/delete";
-import { SelectStatement } from "./statements/select";
-import { UpdateStatement } from "./statements/update";
-import { UpsertStatement } from "./statements/upsert";
+import type { StatementOptions } from "./builder/statement";
+import { CreateStatement } from "./builder/statement/create";
+import { DeleteStatement } from "./builder/statement/delete";
+import { SelectStatement } from "./builder/statement/select";
+import { UpdateStatement } from "./builder/statement/update";
+import { UpsertStatement } from "./builder/statement/upsert";
 import type { AnySchemaOutput } from "./utils/schema";
-import type { StatementOptions } from "./utils/statement";
 
 export class Statements<TSchemaOutput = AnySchemaOutput> {
 	#options: StatementOptions<TSchemaOutput>;

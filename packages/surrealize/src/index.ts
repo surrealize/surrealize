@@ -35,7 +35,7 @@ export type {
 	RepositoryFindOneByOptions,
 } from "./repository/types";
 
-export * from "./statements/common/where";
+export * from "./builder/utils/where";
 
 export {
 	RecordId,

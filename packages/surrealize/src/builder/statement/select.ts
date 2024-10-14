@@ -1,18 +1,23 @@
-import { QueryBuilder, RawQuery } from "../query/builder";
-import type { DurationLike } from "../type/duration";
-import { type TargetLike, resolveTarget } from "../type/target";
-import { type Field, enforceField, enforceFields } from "../utils/field";
-import { appendObject } from "../utils/object";
-import type { AnySchemaOutput } from "../utils/schema";
-import { Statement } from "../utils/statement";
-import { type TaggedTemplate, merge, tag, tagString } from "../utils/template";
-import { enforceNumber } from "../utils/value";
-import { type TimeoutState, buildTimeout } from "./common/timeout";
+import { QueryBuilder, RawQuery } from "../../query/builder";
+import type { DurationLike } from "../../type/duration";
+import { type TargetLike, resolveTarget } from "../../type/target";
+import { type Field, enforceField, enforceFields } from "../../utils/field";
+import { appendObject } from "../../utils/object";
+import type { AnySchemaOutput } from "../../utils/schema";
+import {
+	type TaggedTemplate,
+	merge,
+	tag,
+	tagString,
+} from "../../utils/template";
+import { enforceNumber } from "../../utils/value";
+import { Statement } from "../statement";
+import { type TimeoutState, buildTimeout } from "../utils/timeout";
 import {
 	type WhereCondition,
 	type WhereState,
 	buildWhere,
-} from "./common/where";
+} from "../utils/where";
 
 export type SelectState = {
 	select?: { value: false; fields: string[] } | { value: true; field: string };

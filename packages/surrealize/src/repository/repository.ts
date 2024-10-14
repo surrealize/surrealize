@@ -1,6 +1,6 @@
+import type { SelectStatement } from "../builder/statement/select";
 import { type Query, QueryList } from "../query/query";
 import { Statements } from "../statements";
-import type { SelectStatement } from "../statements/select";
 import type { Surrealize } from "../surrealize";
 import type { Record } from "../type/record";
 import { RecordId, type RecordIdLike } from "../type/recordid";

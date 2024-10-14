@@ -1,11 +1,11 @@
-import { QueryBuilder, RawQuery } from "../query/builder";
-import type { DurationLike } from "../type/duration";
-import type { RecordIdLike } from "../type/recordid";
-import { type TargetLike, resolveTarget } from "../type/target";
-import { appendObject } from "../utils/object";
-import type { AnySchemaOutput } from "../utils/schema";
-import { Statement } from "../utils/statement";
-import { type TaggedTemplate, merge, tag } from "../utils/template";
+import { QueryBuilder, RawQuery } from "../../query/builder";
+import type { DurationLike } from "../../type/duration";
+import type { RecordIdLike } from "../../type/recordid";
+import { type TargetLike, resolveTarget } from "../../type/target";
+import { appendObject } from "../../utils/object";
+import type { AnySchemaOutput } from "../../utils/schema";
+import { type TaggedTemplate, merge, tag } from "../../utils/template";
+import { Statement } from "../statement";
 import {
 	type ContentLike,
 	type DataState,
@@ -13,21 +13,21 @@ import {
 	type PatchLike,
 	type SetLike,
 	buildData,
-} from "./common/data";
+} from "../utils/data";
 import {
 	type ReturnState,
 	type ReturnType,
 	buildReturn,
-} from "./common/return";
-import { type TimeoutState, buildTimeout } from "./common/timeout";
+} from "../utils/return";
+import { type TimeoutState, buildTimeout } from "../utils/timeout";
 import {
 	type WhereCondition,
 	type WhereState,
 	buildWhere,
-} from "./common/where";
+} from "../utils/where";
 
-export type UpdateState = {
-	update?:
+export type UpsertState = {
+	upsert?:
 		| { only: true; target: TargetLike }
 		| { only: false; targets: TargetLike[] };
 	data?: DataState;
@@ -37,47 +37,47 @@ export type UpdateState = {
 	parallel?: true;
 };
 
-export class UpdateStatement<
-	const TState extends UpdateState,
+export class UpsertStatement<
+	const TState extends UpsertState,
 	const TSchemaOutput = AnySchemaOutput,
 > extends Statement<TState, TSchemaOutput> {
-	update<const TTargets extends TargetLike[]>(...targets: TTargets) {
-		return new UpdateStatement(
-			appendObject(this.state, { update: { only: false, targets } }),
+	upsert<const TTargets extends TargetLike[]>(...targets: TTargets) {
+		return new UpsertStatement(
+			appendObject(this.state, { upsert: { only: false, targets } }),
 			this.options,
 		);
 	}
 
-	updateOnly<const TRecordId extends RecordIdLike>(target: TRecordId) {
-		return new UpdateStatement(
-			appendObject(this.state, { update: { only: true, target } }),
+	upsertOnly<const TRecordId extends RecordIdLike>(target: TRecordId) {
+		return new UpsertStatement(
+			appendObject(this.state, { upsert: { only: true, target } }),
 			this.options,
 		);
 	}
 
 	content<const TContent extends ContentLike>(content: TContent) {
-		return new UpdateStatement(
+		return new UpsertStatement(
 			appendObject(this.state, { data: { type: "content", content } }),
 			this.options,
 		);
 	}
 
 	set<const TSet extends SetLike>(set: TSet) {
-		return new UpdateStatement(
+		return new UpsertStatement(
 			appendObject(this.state, { data: { type: "set", set } }),
 			this.options,
 		);
 	}
 
 	merge<const TMerge extends MergeLike>(merge: TMerge) {
-		return new UpdateStatement(
+		return new UpsertStatement(
 			appendObject(this.state, { data: { type: "merge", merge } }),
 			this.options,
 		);
 	}
 
 	patch<const TPatch extends PatchLike>(patch: TPatch) {
-		return new UpdateStatement(
+		return new UpsertStatement(
 			appendObject(this.state, { data: { type: "patch", patch } }),
 			this.options,
 		);
@@ -86,35 +86,35 @@ export class UpdateStatement<
 	where<const TConditions extends WhereCondition<TSchemaOutput>[]>(
 		...conditions: TConditions
 	) {
-		return new UpdateStatement(
+		return new UpsertStatement(
 			appendObject(this.state, { where: { conditions } }),
 			this.options,
 		);
 	}
 
 	return<const TReturn extends ReturnType>(type: TReturn) {
-		return new UpdateStatement(
+		return new UpsertStatement(
 			appendObject(this.state, { return: { type } }),
 			this.options,
 		);
 	}
 
 	timeout<const TTimeout extends DurationLike>(timeout: TTimeout) {
-		return new UpdateStatement(
+		return new UpsertStatement(
 			appendObject(this.state, { timeout: { timeout } }),
 			this.options,
 		);
 	}
 
 	parallel() {
-		return new UpdateStatement(
+		return new UpsertStatement(
 			appendObject(this.state, { parallel: true }),
 			this.options,
 		);
 	}
 
 	[QueryBuilder.buildQuery](): RawQuery {
-		const query = new RawQuery(this.buildUpdate());
+		const query = new RawQuery(this.buildUpsert());
 
 		// content / set
 		if (this.state.data) query.append(buildData(this.state.data));
@@ -134,17 +134,17 @@ export class UpdateStatement<
 		return query;
 	}
 
-	private buildUpdate(): TaggedTemplate {
-		const update = this.state.update;
-		if (!update) throw new Error("update is required");
+	private buildUpsert(): TaggedTemplate {
+		const upsert = this.state.upsert;
+		if (!upsert) throw new Error("upsert is required");
 
-		if (update.only) return tag`UPDATE ONLY ${resolveTarget(update.target)}`;
+		if (upsert.only) return tag`UPSERT ONLY ${resolveTarget(upsert.target)}`;
 
 		return merge(
 			[
-				tag`UPDATE`,
+				tag`UPSERT`,
 				merge(
-					update.targets.map((target) => tag`${resolveTarget(target)}`),
+					upsert.targets.map((target) => tag`${resolveTarget(target)}`),
 					", ",
 				),
 			],

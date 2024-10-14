@@ -1,22 +1,22 @@
-import { QueryBuilder, RawQuery } from "../query/builder";
-import type { DurationLike } from "../type/duration";
-import type { RecordIdLike } from "../type/recordid";
-import { type TargetLike, resolveTarget } from "../type/target";
-import { appendObject } from "../utils/object";
-import type { AnySchemaOutput } from "../utils/schema";
-import { Statement } from "../utils/statement";
-import { type TaggedTemplate, merge, tag } from "../utils/template";
+import { QueryBuilder, RawQuery } from "../../query/builder";
+import type { DurationLike } from "../../type/duration";
+import type { RecordIdLike } from "../../type/recordid";
+import { type TargetLike, resolveTarget } from "../../type/target";
+import { appendObject } from "../../utils/object";
+import type { AnySchemaOutput } from "../../utils/schema";
+import { type TaggedTemplate, merge, tag } from "../../utils/template";
+import { Statement } from "../statement";
 import {
 	type ReturnState,
 	type ReturnType,
 	buildReturn,
-} from "./common/return";
-import { type TimeoutState, buildTimeout } from "./common/timeout";
+} from "../utils/return";
+import { type TimeoutState, buildTimeout } from "../utils/timeout";
 import {
 	type WhereCondition,
 	type WhereState,
 	buildWhere,
-} from "./common/where";
+} from "../utils/where";
 
 export type DeleteState = {
 	delete?:
