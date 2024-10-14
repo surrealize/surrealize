@@ -1,0 +1,19 @@
+{
+	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
+	"scripts": {
+		"test": "bun test",
+		"check": "bunx prettier --check .",
+		"format": "bunx prettier --write .",
+		"build": "bun run --filter 'surrealize' build && bun run --filter '@surrealize/*' build",
+		"release": "bun run ./scripts/release.ts"
+	},
+	"devDependencies": {
+		"@changesets/changelog-github": "^0.5.0",
+		"@changesets/cli": "^2.27.9",
+		"@trivago/prettier-plugin-sort-imports": "^4.3.0",
+		"prettier": "^3.3.3"
+	}
+}
