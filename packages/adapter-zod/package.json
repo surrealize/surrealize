@@ -1,0 +1,37 @@
+{
+	"name": "@surrealize/adapter-zod",
+	"version": "0.0.0",
+	"description": "Zod adapter for Surrealize",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "bun run ./build.ts"
+	},
+	"devDependencies": {
+		"surrealize": "workspace:*",
+		"@types/bun": "^1.1.14",
+		"tsup": "^8.3.5",
+		"typescript": "^5.7.2",
+		"zod": "^3.23.8"
+	},
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"license": "MIT",
+	"author": "Lukas Heizmann <lukas@heizmann.dev>",
+	"homepage": "https://github.com/surrealize/surrealize#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/surrealize/surrealize.git",
+		"directory": "packages/adapter-zod"
+	},
+	"bugs": {
+		"url": "https://github.com/surrealize/surrealize/issues"
+	},
+	"keywords": [
+		"surrealize",
+		"zod",
+		"schema",
+		"adapter"
+	]
+}
