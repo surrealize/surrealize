@@ -1,0 +1,90 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`integration create 1`] = `
+[
+  {
+    "id": RecordId {
+      "id": "alice",
+      "table": "user",
+    },
+    "name": "Alice",
+  },
+  {
+    "id": RecordId {
+      "id": "bob",
+      "table": "user",
+    },
+    "name": "Bob",
+  },
+  {
+    "id": RecordId {
+      "id": "charlie",
+      "table": "user",
+    },
+    "name": "Charlie",
+  },
+]
+`;
+
+exports[`integration filter 1`] = `
+[
+  {
+    "age": 25,
+    "id": RecordId {
+      "id": "alice",
+      "table": "user",
+    },
+    "name": "Alice",
+  },
+  {
+    "age": 10,
+    "id": RecordId {
+      "id": "bob",
+      "table": "user",
+    },
+    "name": "Bob",
+  },
+  {
+    "age": 65,
+    "id": RecordId {
+      "id": "charlie",
+      "table": "user",
+    },
+    "name": "Charlie",
+  },
+]
+`;
+
+exports[`integration filter 2`] = `
+[
+  {
+    "age": 25,
+    "id": RecordId {
+      "id": "alice",
+      "table": "user",
+    },
+    "name": "Alice",
+  },
+]
+`;
+
+exports[`integration filter 3`] = `
+[
+  {
+    "age": 25,
+    "id": RecordId {
+      "id": "alice",
+      "table": "user",
+    },
+    "name": "Alice",
+  },
+  {
+    "age": 65,
+    "id": RecordId {
+      "id": "charlie",
+      "table": "user",
+    },
+    "name": "Charlie",
+  },
+]
+`;
