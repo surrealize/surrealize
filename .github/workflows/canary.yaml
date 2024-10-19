@@ -15,14 +15,15 @@ jobs:
       - run: bun run check
       - run: bun test
       - run: bunx changeset version --snapshot canary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - run: bun run build
       - name: Setup npm
         env:
-          NPM_REGISTRY: npm.pkg.github.com
           NPM_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          npm config set registry https://$NPM_REGISTRY
-          npm config set //$NPM_REGISTRY/:_authToken $NPM_TOKEN
+          npm config set registry https://npm.pkg.github.com
+          npm config set //npm.pkg.github.com/:_authToken $NPM_TOKEN
       - run: bun run release
         env:
           NPM_REGISTRY_URL: https://npm.pkg.github.com
