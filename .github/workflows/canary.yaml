@@ -24,3 +24,6 @@ jobs:
           npm config set registry https://$NPM_REGISTRY
           npm config set //$NPM_REGISTRY/:_authToken $NPM_TOKEN
       - run: bun run release
+        env:
+          NPM_REGISTRY_URL: https://npm.pkg.github.com
+          NPM_TOKEN: ${{ secrets.GH_TOKEN }}
