@@ -1,4 +1,4 @@
-import { Table } from "surrealize";
+import { Table } from "@surrealize/core";
 import { z } from "zod";
 
 import type { ZodCustom } from "../utils";

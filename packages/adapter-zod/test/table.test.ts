@@ -1,5 +1,5 @@
+import { Table } from "@surrealize/core";
 import { describe, expect, test } from "bun:test";
-import { Table } from "surrealize";
 import { z } from "zod";
 
 import { tableType } from "../src";

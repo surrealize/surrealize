@@ -1,4 +1,4 @@
-import type { RecordIdValue } from "surrealize";
+import type { RecordIdValue } from "@surrealize/core";
 import { z } from "zod";
 
 import {

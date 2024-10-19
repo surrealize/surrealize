@@ -29,7 +29,7 @@ bun add @surrealize/adatper-zod
 ## Usage
 
 ```ts
-import { Table, RecordId, type RecordIdValue } from "surrealize";
+import { Table, RecordId, type RecordIdValue } from "@surrealize/core";
 import { record } from "@surrealize/adatper-zod";
 
 /**

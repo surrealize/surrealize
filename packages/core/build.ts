@@ -1,3 +1,4 @@
+import { copyFile } from "node:fs/promises";
 import { build } from "tsup";
 
 import packageJson from "./package.json";
@@ -43,5 +44,12 @@ await Bun.write(
 		2,
 	),
 );
+
+await Promise.all([
+	copyFile(
+		`${import.meta.dirname}/README.md`,
+		`${import.meta.dirname}/dist/README.md`,
+	),
+]);
 
 console.log("🚀 Build complete");

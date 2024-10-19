@@ -1,5 +1,5 @@
+import { RecordId, Table } from "@surrealize/core";
 import { describe, expect, test } from "bun:test";
-import { RecordId, Table } from "surrealize";
 import { z } from "zod";
 
 import { recordIdType } from "../src";

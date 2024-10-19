@@ -7,7 +7,7 @@
 		"test": "bun test",
 		"check": "bunx prettier --check .",
 		"format": "bunx prettier --write .",
-		"build": "bun run --filter 'surrealize' build && bun run --filter '@surrealize/*' build",
+		"build": "bun run ./scripts/build.ts",
 		"release": "bun run ./scripts/release.ts"
 	},
 	"devDependencies": {

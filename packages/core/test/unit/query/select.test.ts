@@ -6,8 +6,6 @@ describe("select", () => {
 	test("select ... from ...", () => {
 		const query = q.select().from("user").toQuery();
 
-		console.log(query.template);
-
 		expect(query.template).toEqual([
 			["SELECT * FROM ", ""],
 			[expect.any(Table)],

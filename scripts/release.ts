@@ -1,12 +1,18 @@
 import { readdir } from "node:fs/promises";
 
+const NPM_REGISTRY_URL =
+	process.env.NPM_REGISTRY_URL ?? "https://npm.pkg.github.com";
+const NPM_TOKEN = process.env.NPM_TOKEN;
+
 const isVersionAvailable = async (
 	name: string,
 	version: string,
 ): Promise<boolean> => {
-	const result = await fetch(`https://registry.npmjs.org/${name}`).then((res) =>
-		res.json(),
-	);
+	const result = await fetch(`${NPM_REGISTRY_URL}/${name}`, {
+		headers: {
+			Authorization: `Bearer ${NPM_TOKEN}`,
+		},
+	}).then((res) => res.json());
 
 	return !result?.versions?.[version];
 };

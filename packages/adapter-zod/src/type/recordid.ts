@@ -4,7 +4,7 @@ import {
 	type RecordIdValue,
 	Table,
 	type TableLike,
-} from "surrealize";
+} from "@surrealize/core";
 import { z } from "zod";
 
 import type { ZodCustom } from "../utils";
