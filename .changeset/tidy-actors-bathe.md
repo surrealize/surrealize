@@ -3,4 +3,4 @@
 "@surrealize/core": patch
 ---
 
-WIP
+Initial release
