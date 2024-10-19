@@ -1,3 +1,4 @@
+import { parse } from "@std/semver";
 import { readdir } from "node:fs/promises";
 
 const NPM_REGISTRY_URL = process.env.NPM_REGISTRY_URL;
@@ -19,6 +20,24 @@ const isVersionAvailable = async (
 	return !result?.versions?.[version];
 };
 
+const determineTag = (version: string): string => {
+	const semver = parse(version);
+
+	const prerelease = semver.prerelease?.[0];
+
+	// if the version has no prerelease tag, return "latest"
+	if (!prerelease) return "latest";
+
+	// if the first prerelease tag is not a string, throw an error
+	if (typeof prerelease !== "string") throw new Error("Invalid prerelease");
+
+	// if the version is a canary, return "canary"
+	if (prerelease.startsWith("canary-")) return "canary";
+
+	// else return the prerelease tag
+	return prerelease;
+};
+
 const publishPackage = async (packagePath: string) => {
 	const packageJson = await Bun.file(`${packagePath}/package.json`).json();
 	const canPublish = await isVersionAvailable(
@@ -33,10 +52,14 @@ const publishPackage = async (packagePath: string) => {
 		return;
 	}
 
-	console.log(`Publishing ${packageJson.name}@${packageJson.version}`);
+	const tag = determineTag(packageJson.version);
+
+	console.log(
+		`Publishing ${packageJson.name}@${packageJson.version} (tag = ${tag})`,
+	);
 
 	const job = Bun.spawnSync({
-		cmd: ["npm", "publish", "--dry-run"],
+		cmd: ["npm", "publish", `--tag ${tag}`],
 		cwd: `${packagePath}/dist`,
 		stdout: "inherit",
 		stderr: "inherit",
