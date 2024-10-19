@@ -18,7 +18,7 @@ jobs:
       - name: Setup npm
         env:
           NPM_REGISTRY: npm.pkg.github.com
-          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           npm config set registry https://$NPM_REGISTRY
           npm config set //$NPM_REGISTRY/:_authToken $NPM_TOKEN
@@ -29,6 +29,6 @@ jobs:
           commit: "chore: release"
           title: "chore: release"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_REGISTRY_URL: https://npm.pkg.github.com
