@@ -1,8 +1,10 @@
 import { readdir } from "node:fs/promises";
 
-const NPM_REGISTRY_URL =
-	process.env.NPM_REGISTRY_URL ?? "https://npm.pkg.github.com";
+const NPM_REGISTRY_URL = process.env.NPM_REGISTRY_URL;
 const NPM_TOKEN = process.env.NPM_TOKEN;
+
+if (!NPM_REGISTRY_URL || !NPM_TOKEN)
+	throw new Error("NPM_TOKEN and NPM_REGISTRY_URL must be set");
 
 const isVersionAvailable = async (
 	name: string,

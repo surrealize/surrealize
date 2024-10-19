@@ -15,6 +15,13 @@ jobs:
       - run: bun run check
       - run: bun test
       - run: bun run build
+      - name: Setup npm
+        env:
+          NPM_REGISTRY: npm.pkg.github.com
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm config set registry https://$NPM_REGISTRY
+          npm config set //$NPM_REGISTRY/:_authToken $NPM_TOKEN
       - name: create release
         uses: changesets/action@v1
         with:
@@ -23,3 +30,5 @@ jobs:
           title: "chore: release"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_REGISTRY_URL: https://npm.pkg.github.com

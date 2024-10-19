@@ -1,8 +1,7 @@
 node_modules/
 dist/
 
-docs/.docusaurus
-docs/build
-
 .DS_Store
 playground.ts
+
+.npmrc
