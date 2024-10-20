@@ -69,7 +69,7 @@ export const merge = (tags: TaggedTemplate[], join = ""): TaggedTemplate => {
  *
  * @param tag The tagged template to format.
  * @param variableConverter An optional variable converter function to convert the variable values to strings. (default: String constructor)
- * @returns
+ * @returns The formatted string.
  */
 export const format = (
 	tag: TaggedTemplate,
