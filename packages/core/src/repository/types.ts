@@ -6,13 +6,11 @@ import type { SchemaLike } from "../utils/schema";
 
 export type RepositoryFindWhere<TSchemaOutput> =
 	TSchemaOutput extends Record<string, unknown>
-		? DeepPartial<TSchemaOutput>
-		: Record<string, unknown>;
+		? DeepPartial<TSchemaOutput> | WhereCondition<TSchemaOutput>[]
+		: Record<string, unknown> | WhereCondition[];
 
 export type RepositoryFindOptions<TSchemaOutput> = {
-	where?:
-		| RepositoryFindWhere<NoInfer<TSchemaOutput>>
-		| WhereCondition<TSchemaOutput>[];
+	where?: RepositoryFindWhere<NoInfer<TSchemaOutput>>;
 
 	limit?: number;
 	start?: number;

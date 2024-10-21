@@ -2,9 +2,10 @@ import type { SelectStatement } from "../builder/statement/select";
 import { type Query, QueryList } from "../query/query";
 import { Statements } from "../statements";
 import type { Surrealize } from "../surrealize";
-import type { Record } from "../type/record";
+import type { AnyRecord, Record } from "../type/record";
 import { RecordId, type RecordIdLike } from "../type/recordid";
 import { Table, type TableLike } from "../type/table";
+import type { PartialOnly } from "../utils/object";
 import {
 	type AnySchemaOutput,
 	type SchemaLike,
@@ -33,7 +34,7 @@ export type RepositoryOptions<TRecord extends Record> = {
  */
 export class Repository<
 	TTable extends string,
-	TRecord extends Record<TTable> = Record<TTable>,
+	TRecord extends Record<TTable> = AnyRecord<TTable>,
 > {
 	readonly table: Table<TTable>;
 	readonly options: RepositoryOptions<TRecord>;
@@ -130,13 +131,21 @@ export class Repository<
 		});
 	}
 
-	create(record: TRecord): Query<TRecord> {
-		return this.q.createOnly(record.id).content(record).toQuery({
-			schema: this.options.schema,
-		});
+	create(record: PartialOnly<TRecord, "id">): Query<TRecord> {
+		if (record.id) {
+			return this.q.createOnly(record.id).content(record).toQuery({
+				schema: this.options.schema,
+			});
+		} else {
+			return this.q.create(this.table).content(record).toQuery({
+				schema: this.options.schema,
+			});
+		}
 	}
 
-	createAll(records: TRecord[]): QueryList<Query<TRecord>[]> {
+	createAll(
+		records: PartialOnly<TRecord, "id">[],
+	): QueryList<Query<TRecord>[]> {
 		return new QueryList(
 			records.map((record) => this.create(record)),
 			{ connection: this.options.connection },

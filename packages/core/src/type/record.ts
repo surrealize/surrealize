@@ -6,3 +6,8 @@ export type Record<
 > = {
 	id: RecordId<TTable, TId>;
 };
+
+export type AnyRecord<
+	TTable extends string = string,
+	TId extends RecordIdValue = RecordIdValue,
+> = Record<TTable, TId> & { [key: string]: unknown };
