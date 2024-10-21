@@ -1,6 +1,6 @@
 {
 	"name": "@surrealize/core",
-	"version": "0.0.0",
+	"version": "0.0.1",
 	"description": "Surrealize is a query builder and ORM for SurrealDB.",
 	"type": "module",
 	"private": true,
