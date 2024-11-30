@@ -1,22 +1,31 @@
-// TODO allow nested dot notated fields
 export type InferFields<TSchemaOutput = unknown> = unknown extends TSchemaOutput
-	? string
-	: Extract<keyof TSchemaOutput, string>;
+	? // in case the schema output is unknown, we can't infer the fields so we allow any string
+		string
+	: // extract the keys of the schema output
+		// TODO allow nested dot notated fields
+		Extract<keyof TSchemaOutput, string>;
 
-export type FieldsReturn<TFields extends string[]> = TFields extends
-	| never[]
-	| []
-	? ["*"]
-	: TFields;
+const fieldRegex = /^([\w\d]+\.)*[\w\d]+$/;
+const fieldWithWildcardRegex = /^(([\w\d]+|\*)\.)*([\w\d]+|\*)$/;
 
-export const enforceField = <TField extends string>(field: TField): TField => {
-	// TODO
-	return field;
+export const enforceField = <TField extends string>(
+	field: TField,
+	mode: "normal" | "wildcard" = "normal",
+): TField => {
+	switch (mode) {
+		case "wildcard":
+			if (fieldWithWildcardRegex.test(field)) return field;
+			break;
+		default:
+			if (fieldRegex.test(field)) return field;
+			break;
+	}
+	throw new Error(`Invalid field: ${field}`);
 };
 
 export const enforceFields = <const TFields extends string[]>(
 	fields: TFields,
-): FieldsReturn<TFields> => {
-	if (fields.length === 0) return ["*"] as FieldsReturn<TFields>;
-	return fields.map((field) => enforceField(field)) as FieldsReturn<TFields>;
+	mode: "normal" | "wildcard" = "normal",
+): TFields => {
+	return fields.map((field) => enforceField(field, mode)) as TFields;
 };

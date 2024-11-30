@@ -30,7 +30,7 @@ export type SelectState = {
 	// order?:
 	limit?: number;
 	start?: number;
-	// fetch?:
+	fetch?: string[];
 	timeout?: TimeoutState;
 	parallel?: true;
 	tempfiles?: true;
@@ -52,7 +52,7 @@ export class SelectStatement<
 			appendObject(this.state, {
 				select: {
 					value: false,
-					fields: enforceFields(fields),
+					fields,
 				},
 			}),
 			this.options,
@@ -62,7 +62,7 @@ export class SelectStatement<
 	selectValue<const TField extends string>(field: TField) {
 		return new SelectStatement(
 			appendObject(this.state, {
-				select: { value: true, field: enforceField(field) },
+				select: { value: true, field },
 			}),
 			this.options,
 		);
@@ -105,6 +105,13 @@ export class SelectStatement<
 		);
 	}
 
+	fetch<const TFields extends string[]>(...fetch: TFields) {
+		return new SelectStatement(
+			appendObject(this.state, { fetch }),
+			this.options,
+		);
+	}
+
 	timeout<const TTimeout extends DurationLike>(timeout: TTimeout) {
 		return new SelectStatement(
 			appendObject(this.state, { timeout: { timeout } }),
@@ -139,12 +146,17 @@ export class SelectStatement<
 		// start
 		if (this.state.start)
 			query.append(tagString(`START ${enforceNumber(this.state.start)}`));
+		// fetch
+		if (this.state.fetch && this.state.fetch.length > 0)
+			query.append(
+				tagString(`FETCH ${enforceFields(this.state.fetch).join(", ")}`),
+			);
 		// timeout
 		if (this.state.timeout) query.append(buildTimeout(this.state.timeout));
 		// parallel
-		if (this.state.parallel) query.append(tag`PARALLEL`);
+		if (this.state.parallel) query.append(tagString("PARALLEL"));
 		// tempfiles
-		if (this.state.tempfiles) query.append(tag`TEMPFILES`);
+		if (this.state.tempfiles) query.append(tagString("TEMPFILES"));
 
 		return query;
 	}
@@ -154,17 +166,12 @@ export class SelectStatement<
 		if (!select) throw new Error("select is required");
 
 		if (select.value)
-			return tagString(`SELECT VALUE ${enforceField(select.field)}`);
+			return tagString(
+				`SELECT VALUE ${enforceField(select.field, "wildcard")}`,
+			);
 
-		return merge(
-			[
-				tagString("SELECT"),
-				merge(
-					select.fields.map((field) => tagString(enforceField(field))),
-					", ",
-				),
-			],
-			" ",
+		return tagString(
+			`SELECT ${select.fields.length === 0 ? "*" : enforceFields(select.fields, "wildcard").join(", ")}`,
 		);
 	}
 
