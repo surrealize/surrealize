@@ -5,5 +5,7 @@
     "@surrealize/adapter-zod": "0.0.0",
     "surrealize": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "eleven-buckets-hear"
+  ]
 }
