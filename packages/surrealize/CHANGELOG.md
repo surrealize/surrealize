@@ -1,5 +1,11 @@
 # surrealize
 
+## 0.1.0-alpha.1
+
+### Patch Changes
+
+- [`058fd04`](https://github.com/surrealize/surrealize/commit/058fd04e1d2c37e6c499e864e4a53b3435e449a9) Thanks [@lkwr](https://github.com/lkwr)! - Export Repository APIs
+
 ## 0.1.0-alpha.0
 
 ### Minor Changes
