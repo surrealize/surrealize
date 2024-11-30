@@ -1,8 +1,8 @@
 export {
-	record,
-	relationRecord,
-	type ZodRecord,
-	type ZodRelationRecord,
+	recordType,
+	relationRecordType,
+	type RecordType,
+	type RelationRecordType,
 } from "./type/record.ts";
 
 export {

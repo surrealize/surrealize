@@ -15,12 +15,12 @@ import {
  * @param options The options to use for the `id` record id schema.
  * @returns The Zod schema.
  */
-export const record = <
+export const recordType = <
 	TTable extends string = string,
 	TId extends RecordIdValue = RecordIdValue,
 >(
 	options: RecordIdTypeOptions<TTable, TId> = {},
-): ZodRecord<TTable, TId> =>
+): RecordType<TTable, TId> =>
 	z.object({
 		id: recordIdType(options),
 	});
@@ -35,7 +35,7 @@ export const record = <
  * @param outOptions The options to use for the `out` record id schema.
  * @returns The Zod schema.
  */
-export const relationRecord = <
+export const relationRecordType = <
 	TTable extends string = string,
 	TId extends RecordIdValue = RecordIdValue,
 	TInTable extends string = string,
@@ -46,7 +46,7 @@ export const relationRecord = <
 	options: RecordIdTypeOptions<TTable, TId>,
 	inOptions: RecordIdTypeOptions<TInTable, TInId>,
 	outOptions: RecordIdTypeOptions<TOutTable, TOutId>,
-): ZodRelationRecord<TTable, TId, TInTable, TInId, TOutTable, TOutId> =>
+): RelationRecordType<TTable, TId, TInTable, TInId, TOutTable, TOutId> =>
 	z.object({
 		id: recordIdType(options),
 		in: recordIdType(inOptions),
@@ -56,7 +56,7 @@ export const relationRecord = <
 /**
  * The Zod schema for a record. This type is returned by the {@link record} function.
  */
-export type ZodRecord<
+export type RecordType<
 	TTable extends string,
 	TId extends RecordIdValue,
 > = z.ZodObject<{ id: RecordIdType<TTable, TId> }>;
@@ -64,7 +64,7 @@ export type ZodRecord<
 /**
  * The Zod schema for a relation record. This type is returned by the {@link relationRecord} function.
  */
-export type ZodRelationRecord<
+export type RelationRecordType<
 	TTable extends string,
 	TId extends RecordIdValue,
 	TInTable extends string,
