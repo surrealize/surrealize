@@ -40,14 +40,14 @@ export type {
 	InferQueriesOutput,
 } from "./query/types.ts";
 
-// export { Repository, type RepositoryOptions } from "./repository/repository";
-// export type {
-// 	RepositoryFindWhere,
-// 	RepositoryFindOptions,
-// 	RepositoryFindByOptions,
-// 	RepositoryFindOneOptions,
-// 	RepositoryFindOneByOptions,
-// } from "./repository/types";
+export { Repository, type RepositoryOptions } from "./repository/repository.ts";
+export type {
+	RepositoryFindWhere,
+	RepositoryFindOptions,
+	RepositoryFindByOptions,
+	RepositoryFindOneOptions,
+	RepositoryFindOneByOptions,
+} from "./repository/types.ts";
 
 export * from "./statement/shared/where.ts";
 
