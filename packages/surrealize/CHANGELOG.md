@@ -1,5 +1,11 @@
 # surrealize
 
+## 0.1.0-alpha.2
+
+### Minor Changes
+
+- [`aec8e4e`](https://github.com/surrealize/surrealize/commit/aec8e4eb271fff5f522e2cc3c9fba37569b82121) Thanks [@lkwr](https://github.com/lkwr)! - Added "fetch" clause to "select"
+
 ## 0.1.0-alpha.1
 
 ### Patch Changes
