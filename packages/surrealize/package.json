@@ -3,7 +3,6 @@
 	"version": "0.1.0-alpha.0",
 	"description": "Surrealize is a query builder and ORM for SurrealDB.",
 	"type": "module",
-	"private": true,
 	"scripts": {
 		"build": "bun run ./build.ts"
 	},

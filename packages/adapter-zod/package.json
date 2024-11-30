@@ -3,7 +3,6 @@
 	"version": "0.1.0-alpha.0",
 	"description": "Zod adapter for Surrealize",
 	"type": "module",
-	"private": true,
 	"scripts": {
 		"build": "bun run ./build.ts"
 	},
