@@ -26,3 +26,8 @@ describe("integration", () => {
 	test("version", () => testVersion(surrealize));
 	test("filter", () => testFilter(surrealize));
 });
+
+test("None and Null", async () => {
+	expect(await surrealize.execute(surql`RETURN NONE`)).toEqual(undefined);
+	expect(await surrealize.execute(surql`RETURN NULL`)).toEqual(null);
+});

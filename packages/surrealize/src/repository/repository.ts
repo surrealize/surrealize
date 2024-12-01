@@ -5,6 +5,7 @@ import {
 } from "../schema/common.ts";
 import type { SchemaLike } from "../schema/types.ts";
 import type { SelectStatement } from "../statement/select.ts";
+import type { WhereCondition } from "../statement/shared/where.ts";
 import { Statements } from "../statements.ts";
 import type { Surrealize } from "../surrealize.ts";
 import type { AnyRecord, Record } from "../type/record.ts";
@@ -16,8 +17,8 @@ import type {
 	RepositoryFindOneByOptions,
 	RepositoryFindOneOptions,
 	RepositoryFindOptions,
-	RepositoryFindWhere,
 	RepositoryRawQueryOptions,
+	RepositoryWhere,
 } from "./types.ts";
 import { convertFilterObjectToConditions } from "./utils.ts";
 
@@ -52,7 +53,7 @@ export class Repository<
 	}
 
 	find(options: RepositoryFindOptions<TRecord> = {}): Query<TRecord[]> {
-		return this._query({
+		return this.query({
 			one: false,
 
 			...options,
@@ -64,10 +65,10 @@ export class Repository<
 	}
 
 	findBy(
-		where: RepositoryFindWhere<TRecord>,
+		where: RepositoryWhere<TRecord>,
 		options: RepositoryFindByOptions<TRecord> = {},
 	): Query<TRecord[]> {
-		return this._query({
+		return this.query({
 			one: false,
 			where,
 
@@ -82,7 +83,7 @@ export class Repository<
 	findOne(
 		options: RepositoryFindOneOptions<TRecord> = {},
 	): Query<TRecord | undefined> {
-		return this._query({
+		return this.query({
 			one: true,
 
 			...options,
@@ -94,10 +95,10 @@ export class Repository<
 	}
 
 	findOneBy(
-		where: RepositoryFindWhere<TRecord>,
+		where: RepositoryWhere<TRecord>,
 		options: RepositoryFindOneByOptions<TRecord> = {},
 	): Query<TRecord | undefined> {
-		return this._query({
+		return this.query({
 			one: true,
 			where,
 
@@ -120,7 +121,7 @@ export class Repository<
 				`The RecordId(${recordId.toString()}) is not part of the Table(${this.table.toString()})`,
 			);
 
-		return this._query({
+		return this.query({
 			one: true,
 			target: recordId,
 
@@ -199,15 +200,39 @@ export class Repository<
 		);
 	}
 
-	deleteById(id: RecordIdLike<TTable>): Query<undefined> {
-		return this.q
-			.delete(id)
-			.toQuery()
-			.with({
+	deleteBy(where: RepositoryWhere<TRecord>): Query<undefined> {
+		return (
+			this.q
+				.delete(this.table)
+				.where(...this.getWhereConditions(where))
+				.toQuery()
 				// skip schema validation and always return undefined
 				// because it deletes the record
-				schema: () => undefined,
-			});
+				.withSchema(() => undefined)
+		);
+	}
+
+	deleteById(id: RecordIdLike<TTable>): Query<undefined> {
+		return (
+			this.q
+				.delete(id)
+				.toQuery()
+				// skip schema validation and always return undefined
+				// because it deletes the record
+				.withSchema(() => undefined)
+		);
+	}
+
+	private getWhereConditions<T = unknown>(
+		where: RepositoryWhere<T>,
+	): WhereCondition<T>[] {
+		if (Array.isArray(where)) {
+			// when a conditions array is passed, use it as is
+			return where as WhereCondition<T>[];
+		} else {
+			// otherwise convert the filter object to conditions
+			return convertFilterObjectToConditions(where) as WhereCondition<T>[];
+		}
 	}
 
 	/**
@@ -216,7 +241,7 @@ export class Repository<
 	 * @param options The options to use for the query.
 	 * @returns The query.
 	 */
-	private _query<TQuerySchemaOutput = unknown>(
+	private query<TQuerySchemaOutput = unknown>(
 		options: RepositoryRawQueryOptions<TQuerySchemaOutput>,
 	): Query<TQuerySchemaOutput> {
 		// build the query
@@ -233,13 +258,7 @@ export class Repository<
 
 		// apply where conditions
 		if (options.where) {
-			query = query.where(
-				...(Array.isArray(options.where)
-					? // when a conditions array is passed, use it as is
-						options.where
-					: // otherwise convert the filter object to conditions
-						convertFilterObjectToConditions(options.where)),
-			);
+			query = query.where(...this.getWhereConditions(options.where));
 		}
 
 		// apply limit (only if not a `one` query)

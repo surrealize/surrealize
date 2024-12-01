@@ -4,13 +4,13 @@ import type { DurationLike } from "../type/duration.ts";
 import type { TargetLike } from "../type/target.ts";
 import type { DeepPartial } from "../utils/object.ts";
 
-export type RepositoryFindWhere<TSchemaOutput> =
+export type RepositoryWhere<TSchemaOutput> =
 	TSchemaOutput extends Record<string, unknown>
 		? DeepPartial<TSchemaOutput> | WhereCondition<TSchemaOutput>[]
 		: Record<string, unknown> | WhereCondition[];
 
 export type RepositoryFindOptions<TSchemaOutput> = {
-	where?: RepositoryFindWhere<NoInfer<TSchemaOutput>>;
+	where?: RepositoryWhere<NoInfer<TSchemaOutput>>;
 
 	limit?: number;
 	start?: number;
@@ -47,7 +47,7 @@ export type RepositoryRawQueryOptions<TSchemaOutput> = {
 	 */
 	target?: TargetLike;
 
-	where?: Record<string, unknown> | WhereCondition[];
+	where?: RepositoryWhere<unknown>;
 
 	limit?: number;
 	start?: number;

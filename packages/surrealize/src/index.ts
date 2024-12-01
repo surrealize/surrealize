@@ -42,7 +42,7 @@ export type {
 
 export { Repository, type RepositoryOptions } from "./repository/repository.ts";
 export type {
-	RepositoryFindWhere,
+	RepositoryWhere,
 	RepositoryFindOptions,
 	RepositoryFindByOptions,
 	RepositoryFindOneOptions,
