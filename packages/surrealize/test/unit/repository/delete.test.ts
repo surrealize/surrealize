@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { RecordId, Repository, Table, neq, q, surql } from "surrealize";
+import { RecordId, Repository, Table, neq, surql } from "surrealize";
 
 const table = Table.from("user");
 const repo = new Repository(table);
