@@ -1,5 +1,11 @@
 # surrealize
 
+## 0.1.0-alpha.3
+
+### Minor Changes
+
+- [`7c0023f`](https://github.com/surrealize/surrealize/commit/7c0023f8c071f3c2158b4be9ebc5df76c7ac0652) Thanks [@lkwr](https://github.com/lkwr)! - Added "deleteBy" repository method
+
 ## 0.1.0-alpha.2
 
 ### Minor Changes
