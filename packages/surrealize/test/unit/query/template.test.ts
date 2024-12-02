@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { format, merge, tag, tagString } from "surrealize";
 
-describe("tagged template", () => {
+describe("Tagged Template", () => {
 	test("tag", () => {
 		expect(tag`Hello`).toEqual([["Hello"], []]);
 		expect(tag`Hello ${"World"}!`).toEqual([["Hello ", "!"], ["World"]]);

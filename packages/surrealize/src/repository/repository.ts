@@ -11,7 +11,7 @@ import type { Surrealize } from "../surrealize.ts";
 import type { AnyRecord, Record } from "../type/record.ts";
 import { RecordId, type RecordIdLike } from "../type/recordid.ts";
 import { Table, type TableLike } from "../type/table.ts";
-import type { PartialOnly } from "../utils/object.ts";
+import { type PartialOnly, flattenObject } from "../utils/object.ts";
 import type {
 	RepositoryFindByOptions,
 	RepositoryFindOneByOptions,
@@ -110,10 +110,7 @@ export class Repository<
 		});
 	}
 
-	findById(
-		id: RecordIdLike<TTable>,
-		// options?: RepositoryFindByIdOptions<TRecord>,
-	): Query<TRecord | undefined> {
+	findById(id: RecordIdLike<TTable>): Query<TRecord | undefined> {
 		const recordId = RecordId.from(id);
 
 		if (!this.table.contains(recordId))
@@ -163,6 +160,24 @@ export class Repository<
 			records.map((record) => this.update(record)),
 			{ connection: this.options.connection },
 		);
+	}
+
+	updateBy(
+		where: RepositoryWhere<TRecord>,
+		partialRecord: Partial<TRecord>,
+	): Query<TRecord> {
+		return this.q
+			.update(this.table)
+			.where(...this.getWhereConditions(where))
+			.set(flattenObject(partialRecord))
+			.toQuery();
+	}
+
+	updateById(
+		id: RecordIdLike<TTable>,
+		partialRecord: Partial<TRecord>,
+	): Query<TRecord> {
+		return this.q.updateOnly(id).set(flattenObject(partialRecord)).toQuery();
 	}
 
 	upsert(record: TRecord): Query<TRecord> {

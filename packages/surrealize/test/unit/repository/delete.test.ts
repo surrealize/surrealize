@@ -12,6 +12,7 @@ describe("Repository delete methods", () => {
 			surql`DELETE ${record.id}`.template,
 		);
 	});
+
 	test("deleteBy", () => {
 		expect(repo.deleteBy({ name: "Bob" }).template).toEqual(
 			surql`DELETE ${table} WHERE (name == ${"Bob"})`.template,
@@ -27,6 +28,12 @@ describe("Repository delete methods", () => {
 		).toEqual(
 			surql`DELETE ${table} WHERE (name.first != ${"Alice"} && name.last != ${"Smith"})`
 				.template,
+		);
+	});
+
+	test("deleteById", () => {
+		expect(repo.deleteById(RecordId.from("user:bob")).template).toEqual(
+			surql`DELETE ${RecordId.from("user:bob")}`.template,
 		);
 	});
 });

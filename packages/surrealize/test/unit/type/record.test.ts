@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { RecordId } from "surrealize";
 
-describe("recordid", () => {
+describe("RecordId", () => {
 	test("constructor: string id", () => {
 		const recordId = new RecordId("users", "123");
 

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { RecordId, Table } from "surrealize";
 
-describe("table", () => {
+describe("Table", () => {
 	test("constructor", () => {
 		const table = new Table("users");
 		expect(table.name).toEqual("users");

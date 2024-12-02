@@ -1,32 +1,6 @@
 // Bun Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`integration create 1`] = `
-[
-  {
-    "id": RecordId {
-      "id": "alice",
-      "table": "user",
-    },
-    "name": "Alice",
-  },
-  {
-    "id": RecordId {
-      "id": "bob",
-      "table": "user",
-    },
-    "name": "Bob",
-  },
-  {
-    "id": RecordId {
-      "id": "charlie",
-      "table": "user",
-    },
-    "name": "Charlie",
-  },
-]
-`;
-
-exports[`integration filter 1`] = `
+exports[`Integration filter 1`] = `
 [
   {
     "age": 25,
@@ -55,7 +29,7 @@ exports[`integration filter 1`] = `
 ]
 `;
 
-exports[`integration filter 2`] = `
+exports[`Integration filter 2`] = `
 [
   {
     "age": 25,
@@ -68,7 +42,7 @@ exports[`integration filter 2`] = `
 ]
 `;
 
-exports[`integration filter 3`] = `
+exports[`Integration filter 3`] = `
 [
   {
     "age": 25,

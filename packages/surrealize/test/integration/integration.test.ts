@@ -15,7 +15,7 @@ beforeEach(async () => {
 	await surrealize.connection.use({ namespace: "test", database: "test" });
 });
 
-describe("integration", () => {
+describe("Integration", () => {
 	test("connection", async () => {
 		const random = Math.floor(Math.random() * 100);
 		const result = await surrealize.execute(surql`RETURN ${random}`);
@@ -25,9 +25,9 @@ describe("integration", () => {
 
 	test("version", () => testVersion(surrealize));
 	test("filter", () => testFilter(surrealize));
-});
 
-test("None and Null", async () => {
-	expect(await surrealize.execute(surql`RETURN NONE`)).toEqual(undefined);
-	expect(await surrealize.execute(surql`RETURN NULL`)).toEqual(null);
+	test("None and Null", async () => {
+		expect(await surrealize.execute(surql`RETURN NONE`)).toEqual(undefined);
+		expect(await surrealize.execute(surql`RETURN NULL`)).toEqual(null);
+	});
 });
