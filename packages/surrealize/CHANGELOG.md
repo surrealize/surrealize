@@ -1,5 +1,11 @@
 # surrealize
 
+## 0.1.0-alpha.4
+
+### Minor Changes
+
+- [`8cb2b94`](https://github.com/surrealize/surrealize/commit/8cb2b94038df0575e584d65c3ba184cb288c1ec1) Thanks [@lkwr](https://github.com/lkwr)! - Added Repository "updateBy" and "updateById" methods
+
 ## 0.1.0-alpha.3
 
 ### Minor Changes
