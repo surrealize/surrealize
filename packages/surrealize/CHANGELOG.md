@@ -1,5 +1,11 @@
 # surrealize
 
+## 0.1.0-alpha.5
+
+### Patch Changes
+
+- [`72b316b`](https://github.com/surrealize/surrealize/commit/72b316b2e1da3d858143fb5d9975cc9847d2a934) Thanks [@lkwr](https://github.com/lkwr)! - Add the ability to skip flatting specific values
+
 ## 0.1.0-alpha.4
 
 ### Minor Changes
