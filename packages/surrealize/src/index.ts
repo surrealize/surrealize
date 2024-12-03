@@ -69,3 +69,5 @@ export {
 	type InferSchemaOutput,
 } from "./schema/types.ts";
 export { mergeSchema, parseSchema } from "./schema/utils.ts";
+
+export { flatten, keep, type Keep } from "./utils/flatten.ts";

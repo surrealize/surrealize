@@ -11,7 +11,8 @@ import type { Surrealize } from "../surrealize.ts";
 import type { AnyRecord, Record } from "../type/record.ts";
 import { RecordId, type RecordIdLike } from "../type/recordid.ts";
 import { Table, type TableLike } from "../type/table.ts";
-import { type PartialOnly, flattenObject } from "../utils/object.ts";
+import { flatten } from "../utils/flatten.ts";
+import type { PartialOnly } from "../utils/object.ts";
 import type {
 	RepositoryFindByOptions,
 	RepositoryFindOneByOptions,
@@ -169,7 +170,7 @@ export class Repository<
 		return this.q
 			.update(this.table)
 			.where(...this.getWhereConditions(where))
-			.set(flattenObject(partialRecord))
+			.set(flatten(partialRecord))
 			.toQuery();
 	}
 
@@ -177,7 +178,7 @@ export class Repository<
 		id: RecordIdLike<TTable>,
 		partialRecord: Partial<TRecord>,
 	): Query<TRecord> {
-		return this.q.updateOnly(id).set(flattenObject(partialRecord)).toQuery();
+		return this.q.updateOnly(id).set(flatten(partialRecord)).toQuery();
 	}
 
 	upsert(record: TRecord): Query<TRecord> {

@@ -37,40 +37,6 @@ export type DeepPartial<T> = T extends Record<string, unknown> | Array<unknown>
 		}
 	: T;
 
-export const flattenObject = (
-	source: Record<string, unknown>,
-): Record<string, unknown> =>
-	Object.fromEntries(flattenRecursive(Object.entries(source)));
-
-const flattenRecursive = (
-	entries: [string, unknown][],
-	prefix = "",
-): [string, unknown][] => {
-	const flattenEntries: [string, unknown][] = [];
-
-	for (const [key, value] of entries) {
-		const flattenKey = prefix + key;
-
-		if (
-			// if value is not an object
-			typeof value !== "object" ||
-			// if value is null
-			value === null ||
-			// if value is not an array and not an plain object
-			(!Array.isArray(value) && value.constructor !== Object)
-		) {
-			flattenEntries.push([flattenKey, value]);
-		} else {
-			// if value is an array or a plain object, recursively flatten it
-			flattenEntries.push(
-				...flattenRecursive(Object.entries(value), `${flattenKey}.`),
-			);
-		}
-	}
-
-	return flattenEntries;
-};
-
 /**
  *  A type which only makes a subset of keys partial.
  */

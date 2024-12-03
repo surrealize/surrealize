@@ -1,5 +1,5 @@
 import { type WhereCondition, eqs } from "../statement/shared/where.ts";
-import { flattenObject } from "../utils/object.ts";
+import { flatten } from "../utils/flatten.ts";
 
 /**
  * Converts a filter object to an array of conditions.
@@ -25,7 +25,7 @@ import { flattenObject } from "../utils/object.ts";
 export const convertFilterObjectToConditions = (
 	filter: Record<string, unknown>,
 ): WhereCondition[] => {
-	const conditionEntries = Object.entries(flattenObject(filter));
+	const conditionEntries = Object.entries(flatten(filter));
 	const conditions = conditionEntries.map(([field, value]) =>
 		// use "equals strict" comparator
 		eqs(field, value),
