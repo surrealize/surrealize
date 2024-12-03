@@ -70,4 +70,4 @@ export {
 } from "./schema/types.ts";
 export { mergeSchema, parseSchema } from "./schema/utils.ts";
 
-export { flatten, keep, type Keep } from "./utils/flatten.ts";
+export { flatten, keep } from "./utils/flatten.ts";
