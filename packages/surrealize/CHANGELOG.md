@@ -1,5 +1,11 @@
 # surrealize
 
+## 0.1.0-alpha.6
+
+### Patch Changes
+
+- [`4214a42`](https://github.com/surrealize/surrealize/commit/4214a425107514e75a0c86367a6eefe01feba928) Thanks [@lkwr](https://github.com/lkwr)! - Fix: ensured "keep" are not producing type errors
+
 ## 0.1.0-alpha.5
 
 ### Patch Changes
