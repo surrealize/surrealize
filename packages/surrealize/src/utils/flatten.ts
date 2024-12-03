@@ -10,7 +10,7 @@ const KEEP_SYMBOL = Symbol("flatten.keep");
  * @returns The wrapped value which indicates the flatting
  *          functionality to keep the value as is.
  */
-export const keep = <T extends object>(value: T): T => {
+export const keep = <const T extends object>(value: T): T => {
 	return Object.assign({ ...value }, { [KEEP_SYMBOL]: true });
 };
 
