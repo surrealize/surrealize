@@ -34,5 +34,12 @@ describe("Flatten utils", () => {
 			"test.foo": "bar",
 			"test.noFlatten": { foo: "bar", nested: { foo: "bar" } },
 		});
+
+		const keepMe = keep({ foo: "bar" });
+
+		expect(flatten({ test: keepMe, nested: { test: keepMe } })).toEqual({
+			test: { foo: "bar" },
+			"nested.test": { foo: "bar" },
+		});
 	});
 });

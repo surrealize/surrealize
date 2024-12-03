@@ -1,11 +1,6 @@
 const KEEP_SYMBOL = Symbol("flatten.keep");
 
 /**
- * A type which indicates that the value should not be flattened and should be used as is.
- */
-export type Keep<T> = { [KEEP_SYMBOL]: true; value: T };
-
-/**
  * Indicates that the value should not be flattened and should be used as is.
  *
  * This is especially useful on update operations,
@@ -15,8 +10,8 @@ export type Keep<T> = { [KEEP_SYMBOL]: true; value: T };
  * @returns The wrapped value which indicates the flatting
  *          functionality to keep the value as is.
  */
-export const keep = <T>(value: T): Keep<T> => {
-	return { [KEEP_SYMBOL]: true, value };
+export const keep = <T extends object>(value: T): T => {
+	return Object.assign({ ...value }, { [KEEP_SYMBOL]: true });
 };
 
 /**
@@ -74,9 +69,16 @@ const flattenRecursive = (
 		} else {
 			// if value is an array or a plain object, recursively flatten it
 			if (KEEP_SYMBOL in value && value[KEEP_SYMBOL]) {
-				// if the value is wrapped with `noFlatten`,
+				// if the value is wrapped with `keep`,
 				// then use the value directly wihtout flattening
-				flattenEntries.push([flattenKey, (value as Keep<unknown>).value]);
+
+				// clone the value to avoid mutating the original object
+				const newValue = { ...value };
+
+				// remove the symbol
+				delete newValue[KEEP_SYMBOL];
+
+				flattenEntries.push([flattenKey, newValue]);
 			} else {
 				flattenEntries.push(
 					...flattenRecursive(Object.entries(value), `${flattenKey}.`),
