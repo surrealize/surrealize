@@ -1,5 +1,11 @@
 # surrealize
 
+## 0.1.0-alpha.7
+
+### Patch Changes
+
+- [`7dc0b07`](https://github.com/surrealize/surrealize/commit/7dc0b07ffcf25b4eea134ca9c2552a9e10340504) Thanks [@lkwr](https://github.com/lkwr)! - Make "keep" types more strict
+
 ## 0.1.0-alpha.6
 
 ### Patch Changes

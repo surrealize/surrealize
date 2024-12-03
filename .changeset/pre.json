@@ -6,6 +6,7 @@
     "surrealize": "0.0.0"
   },
   "changesets": [
+    "chatty-cars-jump",
     "empty-pens-unite",
     "empty-yaks-fetch",
     "mighty-zoos-play",
