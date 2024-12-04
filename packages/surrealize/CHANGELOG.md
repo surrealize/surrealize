@@ -1,5 +1,11 @@
 # surrealize
 
+## 0.1.0-alpha.8
+
+### Patch Changes
+
+- [`ba6b28d`](https://github.com/surrealize/surrealize/commit/ba6b28dbfc35ad9336c2aab72e2586e80e9aa970) Thanks [@lkwr](https://github.com/lkwr)! - Make list execution methods in Surrealize more strict
+
 ## 0.1.0-alpha.7
 
 ### Patch Changes
