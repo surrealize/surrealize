@@ -69,7 +69,7 @@ export class Surrealize {
 		return (schema ? parseSchema(schema, result) : result) as TSchemaOutput;
 	}
 
-	async executeAll<TQueries extends QueriesLike>(
+	async executeAll<const TQueries extends QueriesLike>(
 		queriesLike: TQueries,
 	): Promise<InferQueriesOutput<TQueries>> {
 		return Promise.all(
@@ -79,7 +79,7 @@ export class Surrealize {
 		);
 	}
 
-	async executeTransaction<TQueries extends QueriesLike>(
+	async executeTransaction<const TQueries extends QueriesLike>(
 		queriesLike: TQueries,
 	): Promise<InferQueriesOutput<TQueries>> {
 		const queries = queriesLike.map((queryLike) => resolveQuery(queryLike));
