@@ -1,10 +1,3 @@
-import { Duration as SurrealDuration } from "surrealdb";
-
-import {
-	type Encodeable,
-	Transformer,
-} from "../query/transformer/transformer.ts";
-
 const nanosecond = 1n;
 const microsecond = nanosecond * 1000n;
 const millisecond = microsecond * 1000n;
@@ -38,7 +31,7 @@ export type DurationLike = DurationValue | Duration | bigint | number;
 
 const durationPartRegex = /([0-9]+)([a-z]+)/g;
 
-export class Duration implements Encodeable<SurrealDuration> {
+export class Duration {
 	#nanoseconds: bigint;
 
 	/**
@@ -48,10 +41,6 @@ export class Duration implements Encodeable<SurrealDuration> {
 	 */
 	constructor(duration: bigint) {
 		this.#nanoseconds = duration;
-	}
-
-	[Transformer.encoder]() {
-		return new SurrealDuration(Number(this.#nanoseconds) / Number(millisecond));
 	}
 
 	add(duration: DurationLike): Duration {

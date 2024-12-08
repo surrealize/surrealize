@@ -1,6 +1,6 @@
 export type TransformCodec<TValue = unknown, TTransformed = unknown> = {
 	check: (value: unknown) => value is TValue;
-	transform: (value: TValue) => TTransformed;
+	transform: (value: TValue, transformer: Transformer) => TTransformed;
 };
 
 export type TransformerCustomType<TValue = unknown, TEncoded = unknown> = {
@@ -40,8 +40,8 @@ export class Transformer {
 	 * @param value The value to encode.
 	 * @returns The encoded value.
 	 */
-	encode(value: unknown): unknown {
-		return this.transform(value, "encode");
+	encode<T = unknown>(value: unknown): T {
+		return this.transform(value, "encode") as T;
 	}
 
 	/**
@@ -50,8 +50,8 @@ export class Transformer {
 	 * @param value The value to decode.
 	 * @returns The decoded value.
 	 */
-	decode(value: unknown): unknown {
-		return this.transform(value, "decode");
+	decode<T = unknown>(value: unknown): T {
+		return this.transform(value, "decode") as T;
 	}
 
 	/**
@@ -122,7 +122,7 @@ export class Transformer {
 	): unknown {
 		const codecs = mode === "encode" ? this.encoders : this.decoders;
 		const codec = codecs.find((codec) => codec.check(value));
-		return codec ? codec.transform(value) : value;
+		return codec ? codec.transform(value, this) : value;
 	}
 
 	/**

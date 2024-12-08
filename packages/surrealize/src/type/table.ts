@@ -1,9 +1,3 @@
-import { Table as SurrealTable } from "surrealdb";
-
-import {
-	type Encodeable,
-	Transformer,
-} from "../query/transformer/transformer.ts";
 import { RecordId, type RecordIdValue } from "./recordid.ts";
 
 /**
@@ -16,18 +10,8 @@ export type TableLike<TTable extends string = string> = Table<TTable> | TTable;
 /**
  * The table is a collection of records in SurrealDB.
  */
-export class Table<TTable extends string = string>
-	implements Encodeable<SurrealTable>
-{
-	readonly #native: SurrealTable<TTable>;
-
-	constructor(readonly name: TTable) {
-		this.#native = new SurrealTable(name);
-	}
-
-	[Transformer.encoder]() {
-		return this.#native;
-	}
+export class Table<TTable extends string = string> {
+	constructor(readonly name: TTable) {}
 
 	/**
 	 * Checks if the table is equal to another table.
@@ -67,7 +51,7 @@ export class Table<TTable extends string = string>
 	 * @returns The string representation of the table.
 	 */
 	toString(): string {
-		return this.#native.toString();
+		return this.name;
 	}
 
 	/**

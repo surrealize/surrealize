@@ -1,20 +1,20 @@
-import {
-	RecordId as SurrealRecordId,
-	type RecordIdValue as SurrealRecordIdValue,
-} from "surrealdb";
+import * as Surreal from "surrealdb";
 
-import {
-	type Encodeable,
-	Transformer,
-} from "../query/transformer/transformer.ts";
 import type { SchemaLike } from "../schema/types.ts";
 import { Surrealize } from "../surrealize.ts";
 import { Table, type TableLike } from "./table.ts";
+import { UUID } from "./uuid.ts";
 
 /**
  * The value type of a the id part of a record id.
  */
-export type RecordIdValue = SurrealRecordIdValue;
+export type RecordIdValue =
+	| string
+	| number
+	| bigint
+	| UUID
+	| unknown[]
+	| Record<string, unknown>;
 
 /**
  * A type which represents multiple way of specifying a record id.
@@ -36,20 +36,11 @@ export type RecordIdLike<
 export class RecordId<
 	TTable extends string = string,
 	TId extends RecordIdValue = RecordIdValue,
-> implements Encodeable<SurrealRecordId>
-{
-	readonly #native: SurrealRecordId<TTable>;
-
+> {
 	constructor(
 		readonly table: TTable,
 		readonly id: TId,
-	) {
-		this.#native = new SurrealRecordId(table, id);
-	}
-
-	[Transformer.encoder]() {
-		return this.#native;
-	}
+	) {}
 
 	/**
 	 * Checks if the record id is equal to another record id.
@@ -76,7 +67,10 @@ export class RecordId<
 	 * @returns The string representation of the record id.
 	 */
 	toString(): string {
-		return this.#native.toString();
+		return new Surreal.RecordId(
+			this.table,
+			this.id instanceof UUID ? new Surreal.Uuid(this.id.bytes) : this.id,
+		).toString();
 	}
 
 	/**

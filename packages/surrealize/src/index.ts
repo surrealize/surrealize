@@ -52,6 +52,12 @@ export type {
 export * from "./statement/shared/where.ts";
 
 export {
+	Duration,
+	type DurationLike,
+	type DurationValue,
+} from "./type/duration.ts";
+export { type Record, type AnyRecord } from "./type/record.ts";
+export {
 	RecordId,
 	type RecordIdLike,
 	type RecordIdValue,
@@ -62,6 +68,7 @@ export {
 	type TargetLike,
 	type ResolvedTarget,
 } from "./type/target.ts";
+export { UUID } from "./type/uuid.ts";
 
 export {
 	type SchemaFunction,

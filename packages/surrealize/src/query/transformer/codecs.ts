@@ -1,32 +1,57 @@
-import {
-	Duration as SurrealDuration,
-	RecordId as SurrealRecordId,
-	Table as SurrealTable,
-} from "surrealdb";
+import * as Surreal from "surrealdb";
 
 import { Duration } from "../../type/duration.ts";
 import { RecordId } from "../../type/recordid.ts";
 import { Table } from "../../type/table.ts";
+import { UUID } from "../../type/uuid.ts";
 import type { TransformerCustomType } from "./transformer.ts";
 
-const recordId: TransformerCustomType<RecordId, SurrealRecordId> = {
+const recordId: TransformerCustomType<RecordId, Surreal.RecordId> = {
+	encode: {
+		check: (value) => value instanceof RecordId,
+		transform: (value, transformer) =>
+			new Surreal.RecordId(value.table, transformer.encode(value.id)),
+	},
 	decode: {
-		check: (value) => value instanceof SurrealRecordId,
-		transform: (value) => new RecordId(value.tb, value.id),
+		check: (value) => value instanceof Surreal.RecordId,
+		transform: (value, transformer) =>
+			new RecordId(value.tb, transformer.decode(value.id)),
 	},
 };
 
-const table: TransformerCustomType<Table, SurrealTable> = {
+const table: TransformerCustomType<Table, Surreal.Table> = {
+	encode: {
+		check: (value) => value instanceof Table,
+		transform: (value) => new Surreal.Table(value.name),
+	},
 	decode: {
-		check: (value) => value instanceof SurrealTable,
+		check: (value) => value instanceof Surreal.Table,
 		transform: (value) => new Table(value.tb),
 	},
 };
 
-const duration: TransformerCustomType<Duration, SurrealDuration> = {
+const duration: TransformerCustomType<Duration, Surreal.Duration> = {
+	encode: {
+		check: (value) => value instanceof Duration,
+		transform: (value) =>
+			new Surreal.Duration(
+				Number(value.nanoseconds) / 1_000_000 /* ns -> ms */,
+			),
+	},
 	decode: {
-		check: (value) => value instanceof SurrealDuration,
+		check: (value) => value instanceof Surreal.Duration,
 		transform: (value) => new Duration(BigInt(value.nanoseconds)),
+	},
+};
+
+const uuid: TransformerCustomType<UUID, Surreal.Uuid> = {
+	encode: {
+		check: (value) => value instanceof UUID,
+		transform: (value) => new Surreal.Uuid(value.bytes),
+	},
+	decode: {
+		check: (value) => value instanceof Surreal.Uuid,
+		transform: (value) => new UUID(value.toUint8Array()),
 	},
 };
 
@@ -39,4 +64,5 @@ export const DEFAULT_CODECS: TransformerCustomType[] = [
 	recordId,
 	table,
 	duration,
+	uuid,
 ] as TransformerCustomType[];
