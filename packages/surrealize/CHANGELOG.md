@@ -1,5 +1,11 @@
 # surrealize
 
+## 0.1.0-alpha.9
+
+### Patch Changes
+
+- [`3f74209`](https://github.com/surrealize/surrealize/commit/3f7420963e03cde0b311a11c3dab5abbe1fce64f) Thanks [@lkwr](https://github.com/lkwr)! - Fixed connection is not passed through all repo methods
+
 ## 0.1.0-alpha.8
 
 ### Patch Changes
