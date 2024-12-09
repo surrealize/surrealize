@@ -131,13 +131,17 @@ export class Repository<
 
 	create(record: PartialOnly<TRecord, "id">): Query<TRecord> {
 		if (record.id) {
-			return this.q.createOnly(record.id).content(record).toQuery().with({
-				schema: this.options.schema,
-			});
+			return this.q
+				.createOnly(record.id)
+				.content(record)
+				.toQuery()
+				.withSchema(this.options.schema);
 		} else {
-			return this.q.create(this.table).content(record).toQuery().with({
-				schema: this.options.schema,
-			});
+			return this.q
+				.create(this.table)
+				.content(record)
+				.toQuery()
+				.withSchema(this.options.schema);
 		}
 	}
 
@@ -151,9 +155,11 @@ export class Repository<
 	}
 
 	update(record: TRecord): Query<TRecord> {
-		return this.q.updateOnly(record.id).content(record).toQuery().with({
-			schema: this.options.schema,
-		});
+		return this.q
+			.updateOnly(record.id)
+			.content(record)
+			.toQuery()
+			.withSchema(this.options.schema);
 	}
 
 	updateAll(records: TRecord[]): QueryList<Query<TRecord>[]> {
@@ -182,9 +188,11 @@ export class Repository<
 	}
 
 	upsert(record: TRecord): Query<TRecord> {
-		return this.q.upsertOnly(record.id).content(record).toQuery().with({
-			schema: this.options.schema,
-		});
+		return this.q
+			.upsertOnly(record.id)
+			.content(record)
+			.toQuery()
+			.withSchema(this.options.schema);
 	}
 
 	upsertAll(records: TRecord[]): QueryList<Query<TRecord>[]> {
