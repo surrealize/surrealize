@@ -6,6 +6,7 @@
     "surrealize": "0.0.0"
   },
   "changesets": [
+    "breezy-moles-cover",
     "chatty-cars-jump",
     "empty-pens-unite",
     "empty-yaks-fetch",
