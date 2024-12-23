@@ -179,7 +179,7 @@ export class SelectStatement<
 		const from = this.state.from;
 		if (!from) throw new Error("from is required");
 
-		if (from.only) return tagString(`FROM ONLY ${resolveTarget(from.target)}`);
+		if (from.only) return tag`FROM ONLY ${resolveTarget(from.target)}`;
 
 		return merge(
 			[

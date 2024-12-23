@@ -62,3 +62,106 @@ exports[`Integration filter 3`] = `
   },
 ]
 `;
+
+exports[`Integration select from where 1`] = `
+[
+  {
+    "age": 25,
+    "id": RecordId {
+      "table": "user",
+      "value": "alice",
+    },
+    "name": "Alice",
+  },
+  {
+    "age": 10,
+    "id": RecordId {
+      "table": "user",
+      "value": "bob",
+    },
+    "name": "Bob",
+  },
+  {
+    "age": 65,
+    "id": RecordId {
+      "table": "user",
+      "value": "charlie",
+    },
+    "name": "Charlie",
+  },
+]
+`;
+
+exports[`Integration select from where 2`] = `
+[
+  {
+    "age": 25,
+    "id": RecordId {
+      "table": "user",
+      "value": "alice",
+    },
+    "name": "Alice",
+  },
+]
+`;
+
+exports[`Integration select from where 3`] = `
+[
+  {
+    "age": 25,
+    "id": RecordId {
+      "table": "user",
+      "value": "alice",
+    },
+    "name": "Alice",
+  },
+  {
+    "age": 65,
+    "id": RecordId {
+      "table": "user",
+      "value": "charlie",
+    },
+    "name": "Charlie",
+  },
+]
+`;
+
+exports[`Integration select from only 1`] = `
+[
+  {
+    "age": 25,
+    "id": RecordId {
+      "table": "user",
+      "value": "alice",
+    },
+    "name": "Alice",
+  },
+  {
+    "age": 10,
+    "id": RecordId {
+      "table": "user",
+      "value": "bob",
+    },
+    "name": "Bob",
+  },
+  {
+    "age": 65,
+    "id": RecordId {
+      "table": "user",
+      "value": "charlie",
+    },
+    "name": "Charlie",
+  },
+]
+`;
+
+exports[`Integration select from only 2`] = `
+{
+  "age": 10,
+  "id": RecordId {
+    "table": "user",
+    "value": "bob",
+  },
+  "name": "Bob",
+}
+`;

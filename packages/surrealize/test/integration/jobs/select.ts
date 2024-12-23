@@ -3,7 +3,7 @@ import { type Surrealize, eq, gt, q } from "surrealize";
 
 import { insertDemoData } from "../utils.ts";
 
-export const testFilter = async (surrealize: Surrealize) => {
+export const testSelectWhere = async (surrealize: Surrealize) => {
 	await insertDemoData(surrealize);
 
 	const result1 = await surrealize.execute(
@@ -15,4 +15,12 @@ export const testFilter = async (surrealize: Surrealize) => {
 
 	expect(result1).toMatchSnapshot();
 	expect(result2).toMatchSnapshot();
+};
+
+export const testSelectOnly = async (surrealize: Surrealize) => {
+	await insertDemoData(surrealize);
+
+	const result1 = await surrealize.execute(q.select().fromOnly("user:bob"));
+
+	expect(result1).toMatchSnapshot();
 };

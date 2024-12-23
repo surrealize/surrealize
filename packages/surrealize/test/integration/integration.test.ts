@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test } from "bun:test";
 import Surreal from "surrealdb";
 import { Surrealize, surql } from "surrealize";
 
-import { testFilter } from "./jobs/filter.ts";
+import { testSelectOnly, testSelectWhere } from "./jobs/select.ts";
 import { testVersion } from "./jobs/version.ts";
 
 const surrealize: Surrealize = new Surrealize({
@@ -24,7 +24,10 @@ describe("Integration", () => {
 	});
 
 	test("version", () => testVersion(surrealize));
-	test("filter", () => testFilter(surrealize));
+
+	test("select from where", () => testSelectWhere(surrealize));
+
+	test("select from only", () => testSelectOnly(surrealize));
 
 	test("None and Null", async () => {
 		expect(await surrealize.execute(surql`RETURN NONE`)).toEqual(undefined);
