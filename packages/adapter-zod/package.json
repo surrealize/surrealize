@@ -1,6 +1,6 @@
 {
 	"name": "@surrealize/adapter-zod",
-	"version": "0.1.0-alpha.1",
+	"version": "0.1.0-alpha.2",
 	"description": "Zod adapter for Surrealize",
 	"type": "module",
 	"scripts": {
