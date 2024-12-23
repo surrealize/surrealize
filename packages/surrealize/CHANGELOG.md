@@ -1,5 +1,11 @@
 # surrealize
 
+## 0.1.0-alpha.11
+
+### Patch Changes
+
+- [`cd08852`](https://github.com/surrealize/surrealize/commit/cd08852023fd3f8d40a0d737ffe4d9fb84dc20f1) Thanks [@lkwr](https://github.com/lkwr)! - Fixed 'fromOnly' target not treated as binding
+
 ## 0.1.0-alpha.10
 
 ### Patch Changes
