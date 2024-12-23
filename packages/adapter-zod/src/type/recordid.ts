@@ -4,6 +4,7 @@ import {
 	type RecordIdValue,
 	Table,
 	type TableLike,
+	UUID,
 } from "surrealize";
 import { z } from "zod";
 
@@ -14,7 +15,7 @@ import type { ZodCustom } from "../utils.ts";
  */
 export type RecordIdTypeOptions<
 	TTable extends string,
-	TId extends RecordIdValue,
+	TValue extends RecordIdValue,
 > = {
 	/**
 	 * An optional Zod schema to validate the table part of the record id.
@@ -22,25 +23,25 @@ export type RecordIdTypeOptions<
 	table?: z.ZodType<TTable> | TableLike<TTable>;
 
 	/**
-	 * An optional Zod schema to validate the id part of the record id.
+	 * An optional Zod schema to validate the value part of the record id.
 	 */
-	id?: z.ZodType<TId>;
+	value?: z.ZodType<TValue>;
 
 	/**
 	 * An optional record id to validate against.
 	 *
 	 * If provided, the schema will only validate against this record id.
 	 *
-	 * **Please note:** Using this option with `table` or `id` makes no sense
-	 * as this option already validates the table and id parts of the record id.
+	 * **Please note:** Using this option with `table` or `value` makes no sense
+	 * as this option already validates the table and value parts of the record id.
 	 */
-	recordId?: RecordIdLike<TTable, TId>;
+	recordId?: RecordIdLike<TTable, TValue>;
 };
 
 /**
- * A Zod schema for the id part of a record id.
+ * A Zod schema for the value part of a record id.
  *
- * This can be used to validate the id part of a record id.
+ * This can be used to validate the value part of a record id.
  */
 export const recordIdValueType: ZodCustom<RecordIdValue> =
 	z.custom<RecordIdValue>((value) =>
@@ -51,7 +52,7 @@ export const recordIdValueType: ZodCustom<RecordIdValue> =
 				z.bigint(),
 				z.unknown().array(),
 				z.record(z.unknown()),
-				// TODO uuid type
+				z.instanceof(UUID),
 			])
 			.parse(value),
 	);
@@ -66,30 +67,30 @@ export type RecordIdValueType = typeof recordIdValueType;
  */
 export const recordIdType = <
 	TTable extends string = string,
-	TId extends RecordIdValue = RecordIdValue,
+	TValue extends RecordIdValue = RecordIdValue,
 >(
-	options: RecordIdTypeOptions<TTable, TId> = {},
-): RecordIdType<TTable, TId> =>
+	options: RecordIdTypeOptions<TTable, TValue> = {},
+): RecordIdType<TTable, TValue> =>
 	z.custom((recordId) =>
 		z
 			.instanceof(RecordId)
-			.superRefine((value, ctx) => {
-				const idValueResult = recordIdValueType.safeParse(value.id);
-				if (!idValueResult.success)
-					idValueResult.error.issues.map((issue) => ctx.addIssue(issue));
+			.superRefine((id, ctx) => {
+				const valueResult = recordIdValueType.safeParse(id.value);
+				if (!valueResult.success)
+					valueResult.error.issues.map((issue) => ctx.addIssue(issue));
 
 				if (options.recordId) {
 					if (typeof options.recordId === "string")
 						options.recordId = RecordId.from(options.recordId);
 
-					const success = options.recordId.equals(value);
+					const success = options.recordId.equals(id);
 					if (!success)
 						ctx.addIssue({
 							code: z.ZodIssueCode.custom,
 							message: "RecordId does not match the provided RecordId",
 							params: {
-								wanted: options.recordId.toString(),
-								received: value.toString(),
+								wanted: `Table: ${options.recordId.table}, Value: ${options.recordId.value}`,
+								received: `Table: ${id.table}, Value: ${id.value}`,
 							},
 						});
 				}
@@ -102,13 +103,13 @@ export const recordIdType = <
 					if (typeof options.table === "string")
 						options.table = z.literal(options.table);
 
-					const result = options.table.safeParse(value.table);
+					const result = options.table.safeParse(id.table);
 					if (!result.success)
 						result.error.issues.map((issue) => ctx.addIssue(issue));
 				}
 
-				if (options.id) {
-					const result = options.id.safeParse(value.id);
+				if (options.value) {
+					const result = options.value.safeParse(id.value);
 					if (!result.success)
 						result.error.issues.map((issue) => ctx.addIssue(issue));
 				}
@@ -121,5 +122,5 @@ export const recordIdType = <
  */
 export type RecordIdType<
 	TTable extends string = string,
-	TId extends RecordIdValue = RecordIdValue,
-> = ZodCustom<RecordId<TTable, TId>>;
+	TValue extends RecordIdValue = RecordIdValue,
+> = ZodCustom<RecordId<TTable, TValue>>;

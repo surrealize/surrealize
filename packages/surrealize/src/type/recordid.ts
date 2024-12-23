@@ -1,5 +1,3 @@
-import * as Surreal from "surrealdb";
-
 import type { SchemaLike } from "../schema/types.ts";
 import { Surrealize } from "../surrealize.ts";
 import { Table, type TableLike } from "./table.ts";
@@ -35,11 +33,11 @@ export type RecordIdLike<
  */
 export class RecordId<
 	TTable extends string = string,
-	TId extends RecordIdValue = RecordIdValue,
+	TValue extends RecordIdValue = RecordIdValue,
 > {
 	constructor(
 		readonly table: TTable,
-		readonly id: TId,
+		readonly value: TValue,
 	) {}
 
 	/**
@@ -48,8 +46,8 @@ export class RecordId<
 	 * @param recordId The record id to compare with.
 	 * @returns True if the record ids are equal, false otherwise.
 	 */
-	equals(recordId: RecordId): recordId is RecordId<TTable, TId> {
-		return this.toString() === recordId.toString();
+	equals(recordId: RecordId): recordId is RecordId<TTable, TValue> {
+		return this.table === recordId.table && this.value === recordId.value;
 	}
 
 	/**
@@ -59,18 +57,6 @@ export class RecordId<
 	 */
 	getTable(): Table<TTable> {
 		return new Table(this.table);
-	}
-
-	/**
-	 * Get the string representation of the record id.
-	 *
-	 * @returns The string representation of the record id.
-	 */
-	toString(): string {
-		return new Surreal.RecordId(
-			this.table,
-			this.id instanceof UUID ? new Surreal.Uuid(this.id.bytes) : this.id,
-		).toString();
 	}
 
 	/**
@@ -101,7 +87,7 @@ export class RecordId<
 	}
 
 	/**
-	 * Instantiate a record id from a table and id.
+	 * Instantiate a record id from a table and value.
 	 *
 	 * @example
 	 * ```ts
@@ -111,13 +97,13 @@ export class RecordId<
 	 * ```
 	 *
 	 * @param table The table of the record id.
-	 * @param id The id of the record id.
+	 * @param value The value of the record id.
 	 * @returns The instantiated record id.
 	 */
-	static from<const TTable extends string, const TId extends RecordIdValue>(
+	static from<const TTable extends string, const TValue extends RecordIdValue>(
 		table: TableLike<TTable>,
-		id: TId,
-	): RecordId<TTable, TId>;
+		id: TValue,
+	): RecordId<TTable, TValue>;
 
 	/**
 	 * Instantiate a record id from a record id like input.
@@ -130,24 +116,27 @@ export class RecordId<
 	 * @param recordId The record id like input.
 	 * @returns The instantiated record id.
 	 */
-	static from<const TTable extends string, const TId extends RecordIdValue>(
-		recordId: RecordIdLike<TTable, TId>,
-	): RecordId<TTable, TId>;
+	static from<const TTable extends string, const TValue extends RecordIdValue>(
+		recordId: RecordIdLike<TTable, TValue>,
+	): RecordId<TTable, TValue>;
 
-	static from<const TTable extends string, const TId extends RecordIdValue>(
-		tableOrId: TableLike<TTable> | RecordIdLike<TTable, TId>,
-		id?: TId,
-	): RecordId<TTable, TId> {
-		if (id === undefined) {
-			if (tableOrId instanceof RecordId) return tableOrId;
+	static from<const TTable extends string, const TValue extends RecordIdValue>(
+		tableOrValue: TableLike<TTable> | RecordIdLike<TTable, TValue>,
+		value?: TValue,
+	): RecordId<TTable, TValue> {
+		if (value === undefined) {
+			if (tableOrValue instanceof RecordId) return tableOrValue;
 
-			const [table, id] = (tableOrId as string).split(":") as [TTable, TId];
-			return new RecordId(table, id);
+			const [table, value] = (tableOrValue as string).split(":") as [
+				TTable,
+				TValue,
+			];
+			return new RecordId(table, value);
 		}
 
-		if (tableOrId instanceof RecordId) return tableOrId;
+		if (tableOrValue instanceof RecordId) return tableOrValue;
 
-		const table = Table.from(tableOrId as TTable | Table<TTable>);
-		return new RecordId(table.name, id);
+		const table = Table.from(tableOrValue as TTable | Table<TTable>);
+		return new RecordId(table.name, value);
 	}
 }

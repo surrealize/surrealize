@@ -17,10 +17,10 @@ import {
  */
 export const recordType = <
 	TTable extends string = string,
-	TId extends RecordIdValue = RecordIdValue,
+	TValue extends RecordIdValue = RecordIdValue,
 >(
-	options: RecordIdTypeOptions<TTable, TId> = {},
-): RecordType<TTable, TId> =>
+	options: RecordIdTypeOptions<TTable, TValue> = {},
+): RecordType<TTable, TValue> =>
 	z.object({
 		id: recordIdType(options),
 	});
@@ -37,16 +37,23 @@ export const recordType = <
  */
 export const relationRecordType = <
 	TTable extends string = string,
-	TId extends RecordIdValue = RecordIdValue,
+	TValue extends RecordIdValue = RecordIdValue,
 	TInTable extends string = string,
-	TInId extends RecordIdValue = RecordIdValue,
+	TInValue extends RecordIdValue = RecordIdValue,
 	TOutTable extends string = string,
-	TOutId extends RecordIdValue = RecordIdValue,
+	TOutValue extends RecordIdValue = RecordIdValue,
 >(
-	options: RecordIdTypeOptions<TTable, TId>,
-	inOptions: RecordIdTypeOptions<TInTable, TInId>,
-	outOptions: RecordIdTypeOptions<TOutTable, TOutId>,
-): RelationRecordType<TTable, TId, TInTable, TInId, TOutTable, TOutId> =>
+	options: RecordIdTypeOptions<TTable, TValue>,
+	inOptions: RecordIdTypeOptions<TInTable, TInValue>,
+	outOptions: RecordIdTypeOptions<TOutTable, TOutValue>,
+): RelationRecordType<
+	TTable,
+	TValue,
+	TInTable,
+	TInValue,
+	TOutTable,
+	TOutValue
+> =>
 	z.object({
 		id: recordIdType(options),
 		in: recordIdType(inOptions),
@@ -66,13 +73,13 @@ export type RecordType<
  */
 export type RelationRecordType<
 	TTable extends string,
-	TId extends RecordIdValue,
+	TValue extends RecordIdValue,
 	TInTable extends string,
-	TInId extends RecordIdValue,
+	TInValue extends RecordIdValue,
 	TOutTable extends string,
-	TOutId extends RecordIdValue,
+	TOutValue extends RecordIdValue,
 > = z.ZodObject<{
-	id: RecordIdType<TTable, TId>;
-	in: RecordIdType<TInTable, TInId>;
-	out: RecordIdType<TOutTable, TOutId>;
+	id: RecordIdType<TTable, TValue>;
+	in: RecordIdType<TInTable, TInValue>;
+	out: RecordIdType<TOutTable, TOutValue>;
 }>;

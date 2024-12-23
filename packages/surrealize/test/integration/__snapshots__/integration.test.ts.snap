@@ -5,24 +5,24 @@ exports[`Integration filter 1`] = `
   {
     "age": 25,
     "id": RecordId {
-      "id": "alice",
       "table": "user",
+      "value": "alice",
     },
     "name": "Alice",
   },
   {
     "age": 10,
     "id": RecordId {
-      "id": "bob",
       "table": "user",
+      "value": "bob",
     },
     "name": "Bob",
   },
   {
     "age": 65,
     "id": RecordId {
-      "id": "charlie",
       "table": "user",
+      "value": "charlie",
     },
     "name": "Charlie",
   },
@@ -34,8 +34,8 @@ exports[`Integration filter 2`] = `
   {
     "age": 25,
     "id": RecordId {
-      "id": "alice",
       "table": "user",
+      "value": "alice",
     },
     "name": "Alice",
   },
@@ -47,16 +47,16 @@ exports[`Integration filter 3`] = `
   {
     "age": 25,
     "id": RecordId {
-      "id": "alice",
       "table": "user",
+      "value": "alice",
     },
     "name": "Alice",
   },
   {
     "age": 65,
     "id": RecordId {
-      "id": "charlie",
       "table": "user",
+      "value": "charlie",
     },
     "name": "Charlie",
   },

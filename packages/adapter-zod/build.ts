@@ -1,8 +1,8 @@
 import { copyFile } from "node:fs/promises";
 import { build } from "tsup";
 
-import surrealizePackageJson from "../surrealize/package.json";
-import packageJson from "./package.json";
+import surrealizePackageJson from "../surrealize/package.json" with { type: "json" };
+import packageJson from "./package.json" with { type: "json" };
 
 // bundle the library
 await build({

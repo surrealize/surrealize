@@ -6,14 +6,14 @@ describe("RecordId", () => {
 		const recordId = new RecordId("users", "123");
 
 		expect(recordId.table).toEqual("users");
-		expect(recordId.id).toEqual("123");
+		expect(recordId.value).toEqual("123");
 	});
 
 	test("constructor: number id", () => {
 		const recordId = new RecordId("users", 123);
 
 		expect(recordId.table).toEqual("users");
-		expect(recordId.id).toEqual(123);
+		expect(recordId.value).toEqual(123);
 	});
 
 	test("equals", () => {

@@ -5,6 +5,7 @@
 		"moduleResolution": "NodeNext",
 		"allowImportingTsExtensions": true,
 		"resolveJsonModule": true,
+		"skipLibCheck": true,
 
 		"strict": true,
 		"verbatimModuleSyntax": true,

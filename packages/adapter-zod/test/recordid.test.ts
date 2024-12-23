@@ -38,30 +38,33 @@ describe("RecordId", () => {
 		expect(() => recordIdSchema.parse(recordId2)).toThrow();
 	});
 
-	test("with id schema", () => {
-		// id schema which only accepts letters ([a-z])
-		const idSchema = z.string().regex(/^[a-z]+$/);
+	test("with value schema", () => {
+		// value schema which only accepts letters ([a-z])
+		const valueSchema = z.string().regex(/^[a-z]+$/);
 
 		const recordId1 = RecordId.from("user:bob");
 		const recordId2 = RecordId.from("user:bob2");
 
-		const recordIdSchema = recordIdType({ id: idSchema });
+		const recordIdSchema = recordIdType({ value: valueSchema });
 
 		expect(recordIdSchema.parse(recordId1)).toEqual(recordId1);
 		expect(() => recordIdSchema.parse(recordId2)).toThrow();
 	});
 
-	test("with table and id schema", () => {
+	test("with table and value schema", () => {
 		const tableSchema = z.literal("user");
 
-		// id schema which only accepts letters ([a-z])
-		const idSchema = z.string().regex(/^[a-z]+$/);
+		// value schema which only accepts letters ([a-z])
+		const valueSchema = z.string().regex(/^[a-z]+$/);
 
 		const recordId1 = RecordId.from("user:bob");
 		const recordId2 = RecordId.from("user:bob2");
 		const recordId3 = RecordId.from("users:bob");
 
-		const recordIdSchema = recordIdType({ table: tableSchema, id: idSchema });
+		const recordIdSchema = recordIdType({
+			table: tableSchema,
+			value: valueSchema,
+		});
 
 		expect(recordIdSchema.parse(recordId1)).toEqual(recordId1);
 		expect(() => recordIdSchema.parse(recordId2)).toThrow();

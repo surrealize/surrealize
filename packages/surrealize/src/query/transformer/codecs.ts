@@ -8,9 +8,9 @@ import type { TransformerCustomType } from "./transformer.ts";
 
 const recordId: TransformerCustomType<RecordId, Surreal.RecordId> = {
 	encode: {
-		check: (value) => value instanceof RecordId,
-		transform: (value, transformer) =>
-			new Surreal.RecordId(value.table, transformer.encode(value.id)),
+		check: (id) => id instanceof RecordId,
+		transform: (id, transformer) =>
+			new Surreal.RecordId(id.table, transformer.encode(id.value)),
 	},
 	decode: {
 		check: (value) => value instanceof Surreal.RecordId,
