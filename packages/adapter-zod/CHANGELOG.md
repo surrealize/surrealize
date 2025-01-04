@@ -1,5 +1,11 @@
 # @surrealize/adapter-zod
 
+## 0.1.0-alpha.3
+
+### Patch Changes
+
+- [`cc169ed`](https://github.com/surrealize/surrealize/commit/cc169ed001d92408ae254f6469d17bef87d0edf3) Thanks [@lkwr](https://github.com/lkwr)! - Fix wrong use of "z.custom"
+
 ## 0.1.0-alpha.2
 
 ### Patch Changes
