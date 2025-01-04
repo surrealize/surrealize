@@ -22,22 +22,17 @@ export type TableTypeOptions<TTable extends string> = {
 export const tableType = <TTable extends string>(
 	options: TableTypeOptions<TTable> = {},
 ): TableType<TTable> =>
-	z.custom((table) =>
-		z
-			.instanceof(Table)
-			.superRefine((value, ctx) => {
-				if (options.table) {
-					// If the table input is an actual table, convert it to a zod schema.
-					if (options.table instanceof Table)
-						options.table = z.literal(options.table.name);
+	z.instanceof<typeof Table<TTable>>(Table).superRefine((value, ctx) => {
+		if (options.table) {
+			// If the table input is an actual table, convert it to a zod schema.
+			if (options.table instanceof Table)
+				options.table = z.literal(options.table.name);
 
-					const result = options.table.safeParse(value.name);
-					if (!result.success)
-						result.error.issues.map((issue) => ctx.addIssue(issue));
-				}
-			})
-			.parse(table),
-	);
+			const result = options.table.safeParse(value.name);
+			if (!result.success)
+				result.error.issues.map((issue) => ctx.addIssue(issue));
+		}
+	});
 
 /**
  * The Zod schema for a table. This type is returned by the {@link tableType} function.

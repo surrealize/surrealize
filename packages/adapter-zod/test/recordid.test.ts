@@ -12,6 +12,7 @@ describe("RecordId", () => {
 		expect(recordIdType().parse(recordId1)).toEqual(recordId2);
 		expect(recordIdType().parse(recordId1)).not.toEqual(recordId3);
 		expect(() => recordIdType().parse("invalid")).toThrow();
+		expect(recordIdType().safeParse(123).success).toBe(false);
 	});
 
 	test("with table schema", () => {

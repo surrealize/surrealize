@@ -14,7 +14,7 @@
 		"@changesets/changelog-github": "^0.5.0",
 		"@changesets/cli": "^2.27.11",
 		"@std/semver": "npm:@jsr/std__semver@^1.0.3",
-		"@trivago/prettier-plugin-sort-imports": "^5.2.0",
+		"@trivago/prettier-plugin-sort-imports": "^5.2.1",
 		"prettier": "^3.4.2"
 	}
 }

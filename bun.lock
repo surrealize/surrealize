@@ -6,13 +6,13 @@
         "@changesets/changelog-github": "^0.5.0",
         "@changesets/cli": "^2.27.11",
         "@std/semver": "npm:@jsr/std__semver@^1.0.3",
-        "@trivago/prettier-plugin-sort-imports": "^5.2.0",
+        "@trivago/prettier-plugin-sort-imports": "^5.2.1",
         "prettier": "^3.4.2",
       },
     },
     "packages/adapter-zod": {
       "name": "@surrealize/adapter-zod",
-      "version": "0.1.0-alpha.1",
+      "version": "0.1.0-alpha.2",
       "devDependencies": {
         "@types/bun": "^1.1.14",
         "surrealize": "packages/surrealize",
@@ -23,7 +23,7 @@
     },
     "packages/surrealize": {
       "name": "surrealize",
-      "version": "0.1.0-alpha.9",
+      "version": "0.1.0-alpha.11",
       "dependencies": {
         "surrealdb": "^1.1.0",
       },
@@ -202,7 +202,7 @@
 
     "@surrealize/adapter-zod": ["@surrealize/adapter-zod@workspace:packages/adapter-zod", { "devDependencies": { "@types/bun": "^1.1.14", "surrealize": "packages/surrealize", "tsup": "^8.3.5", "typescript": "^5.7.2", "zod": "^3.24.1" } }],
 
-    "@trivago/prettier-plugin-sort-imports": ["@trivago/prettier-plugin-sort-imports@5.2.0", "", { "dependencies": { "@babel/generator": "^7.26.2", "@babel/parser": "^7.26.2", "@babel/traverse": "^7.25.9", "@babel/types": "^7.26.0", "javascript-natural-sort": "^0.7.1", "lodash": "^4.17.21" }, "peerDependencies": { "@vue/compiler-sfc": "3.x", "prettier": "2.x - 3.x", "prettier-plugin-svelte": "3.x", "svelte": "4.x" }, "optionalPeers": ["@vue/compiler-sfc", "prettier-plugin-svelte", "svelte"] }, "sha512-yEIJ7xMKYQwyNRjxSdi4Gs37iszikAjxfky+3hu9bn24u8eHLJNDMAoOTyowp8p6EpSl8IQMdkfBx+WnJTttsw=="],
+    "@trivago/prettier-plugin-sort-imports": ["@trivago/prettier-plugin-sort-imports@5.2.1", "", { "dependencies": { "@babel/generator": "^7.26.2", "@babel/parser": "^7.26.2", "@babel/traverse": "^7.25.9", "@babel/types": "^7.26.0", "javascript-natural-sort": "^0.7.1", "lodash": "^4.17.21" }, "peerDependencies": { "@vue/compiler-sfc": "3.x", "prettier": "2.x - 3.x", "prettier-plugin-svelte": "3.x", "svelte": "4.x || 5.x" }, "optionalPeers": ["@vue/compiler-sfc", "prettier-plugin-svelte", "svelte"] }, "sha512-NDZndt0fmVThIx/8cExuJHLZagUVzfGCoVrwH9x6aZvwfBdkrDFTYujecek6X2WpG4uUFsVaPg5+aNQPSyjcmw=="],
 
     "@types/bun": ["@types/bun@1.1.14", "", { "dependencies": { "bun-types": "1.1.37" } }, "sha512-opVYiFGtO2af0dnWBdZWlioLBoxSdDO5qokaazLhq8XQtGZbY4pY3/JxY8Zdf/hEwGubbp7ErZXoN1+h2yesxA=="],
 

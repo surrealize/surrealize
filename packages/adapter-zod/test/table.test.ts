@@ -12,6 +12,7 @@ describe("Table", () => {
 		expect(tableType().parse(table1)).toEqual(table2);
 		expect(tableType().parse(table1)).not.toEqual(table3);
 		expect(() => tableType().parse("invalid")).toThrow();
+		expect(tableType().safeParse(123).success).toBe(false);
 	});
 
 	test("with table schema", () => {
