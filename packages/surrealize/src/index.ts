@@ -1,15 +1,6 @@
 export { Statements, q } from "./statements.ts";
 export { Surrealize, type SurrealizeOptions } from "./surrealize.ts";
 
-export { DEFAULT_CODECS } from "./query/transformer/codecs.ts";
-export {
-	Transformer,
-	type TransformCodec,
-	type TransformerCustomType,
-	type Decodeable,
-	type Encodeable,
-} from "./query/transformer/transformer.ts";
-
 export {
 	QueryBuilder,
 	prepareQuery,
@@ -70,11 +61,7 @@ export {
 } from "./type/target.ts";
 export { UUID } from "./type/uuid.ts";
 
-export {
-	type SchemaFunction,
-	type SchemaLike,
-	type InferSchemaOutput,
-} from "./schema/types.ts";
+export { type Schema, type InferSchemaOutput } from "./schema/types.ts";
 export { mergeSchema, parseSchema } from "./schema/utils.ts";
 
 export { flatten, keep } from "./utils/flatten.ts";

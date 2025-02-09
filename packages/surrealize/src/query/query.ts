@@ -1,4 +1,4 @@
-import type { SchemaLike } from "../schema/types.ts";
+import type { Schema } from "../schema/types.ts";
 import { Surrealize } from "../surrealize.ts";
 import { type TaggedTemplate, tag } from "./template.ts";
 import type { InferQueriesOutput } from "./types.ts";
@@ -14,7 +14,7 @@ export type QueryOptions<TSchemaOutput = unknown> = {
 	/**
 	 * An optional schema to use for validating the result.
 	 */
-	schema?: SchemaLike<TSchemaOutput>;
+	schema?: Schema<TSchemaOutput>;
 };
 
 export type QueryListOptions = {
@@ -30,7 +30,7 @@ export class Query<TSchemaOutput = unknown> {
 	readonly template: TaggedTemplate;
 	readonly connection?: Surrealize;
 
-	schema?: SchemaLike<TSchemaOutput>;
+	schema?: Schema<TSchemaOutput>;
 
 	constructor(
 		template: TaggedTemplate,
@@ -49,7 +49,7 @@ export class Query<TSchemaOutput = unknown> {
 	}
 
 	withSchema<TWithSchema = unknown>(
-		schema?: SchemaLike<TWithSchema>,
+		schema?: Schema<TWithSchema>,
 	): Query<TWithSchema> {
 		return new Query(this.template, {
 			connection: this.connection,

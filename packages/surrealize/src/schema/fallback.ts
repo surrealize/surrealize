@@ -1,4 +1,4 @@
-import type { SchemaLike } from "./types.ts";
+import type { Schema } from "./types.ts";
 
 /**
  * Takes two schema outputs and returns the first one which is not unknown.
@@ -16,13 +16,13 @@ export type FallbackSchemaOutput<TSchemaOutput1, TSchemaOutput2> =
  * In case both inputs are undefined, it returns undefined.
  */
 export type FallbackSchema<
-	TSchemaLike1 extends SchemaLike | undefined,
-	TSchemaLike2 extends SchemaLike | undefined,
-> = TSchemaLike1 extends undefined
-	? TSchemaLike2 extends undefined
+	TSchema1 extends Schema | undefined,
+	TSchema2 extends Schema | undefined,
+> = TSchema1 extends undefined
+	? TSchema2 extends undefined
 		? undefined
-		: TSchemaLike2
-	: TSchemaLike1;
+		: TSchema2
+	: TSchema1;
 
 /**
  * Takes two schema like inputs and returns the first one which is not undefined.
@@ -32,11 +32,11 @@ export type FallbackSchema<
  * @returns The first schema which is not undefined or undefined if both schemas are undefined.
  */
 export const fallbackSchema = <
-	const TSchemaLike1 extends SchemaLike | undefined = undefined,
-	const TSchemaLike2 extends SchemaLike | undefined = undefined,
+	const TSchema1 extends Schema | undefined = undefined,
+	const TSchema2 extends Schema | undefined = undefined,
 >(
-	schema1?: TSchemaLike1,
-	schema2?: TSchemaLike2,
-): FallbackSchema<TSchemaLike1, TSchemaLike2> => {
-	return (schema1 ?? schema2) as FallbackSchema<TSchemaLike1, TSchemaLike2>;
+	schema1?: TSchema1,
+	schema2?: TSchema2,
+): FallbackSchema<TSchema1, TSchema2> => {
+	return (schema1 ?? schema2) as FallbackSchema<TSchema1, TSchema2>;
 };

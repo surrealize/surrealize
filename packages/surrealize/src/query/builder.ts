@@ -7,7 +7,6 @@ import {
 	tag,
 	tagString,
 } from "./template.ts";
-import type { Transformer } from "./transformer/transformer.ts";
 import { type PreparedQuery, type QueryLike, toQuery } from "./types.ts";
 
 export class QueryBuilder {
@@ -73,17 +72,11 @@ export const resolveQuery = <TSchemaOutput>(
  * @param query The tagged template to convert.
  * @returns The compiled query (including the query string and the bindings object).
  */
-export const prepareQuery = (
-	template: TaggedTemplate,
-	transformer?: Transformer,
-): PreparedQuery => {
+export const prepareQuery = (template: TaggedTemplate): PreparedQuery => {
 	const normalizedQuery = stripLastSemicolon(template);
 	const formattedQuery = format(normalizedQuery, (_, index) => `$_${index}`);
 	const bindings = Object.fromEntries(
-		normalizedQuery[1].map(
-			(value, index) =>
-				[`_${index}`, transformer ? transformer.encode(value) : value] as const,
-		),
+		normalizedQuery[1].map((value, index) => [`_${index}`, value] as const),
 	);
 
 	return { query: formattedQuery, bindings };
@@ -97,10 +90,7 @@ export const prepareQuery = (
  * @param queries The tagged template queries to convert and wrap in a transaction.
  * @returns The compiled query (including the query string and the bindings object) as a transaction.
  */
-export const prepareTransaction = (
-	queries: Query[],
-	transformer?: any, // TODO
-): PreparedQuery => {
+export const prepareTransaction = (queries: Query[]): PreparedQuery => {
 	return prepareQuery(
 		merge([
 			merge(
@@ -116,7 +106,6 @@ export const prepareTransaction = (
 			),
 			tag`;`,
 		]),
-		transformer,
 	);
 };
 

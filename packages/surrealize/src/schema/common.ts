@@ -1,4 +1,6 @@
-import type { SchemaFunction, SchemaLike } from "./types.ts";
+import type { StandardSchemaV1 } from "@standard-schema/spec";
+
+import type { Schema } from "./types.ts";
 import { mergeSchema, parseSchema } from "./utils.ts";
 
 /**
@@ -7,10 +9,15 @@ import { mergeSchema, parseSchema } from "./utils.ts";
  * @param value The value to validate.
  * @returns undefined if the value is undefined, otherwise throws an error.
  */
-export const undefinedSchema: SchemaFunction<undefined> = (value: unknown) => {
-	if (value !== undefined)
-		throw new Error(`Expected undefined, received: ${value}`);
-	return undefined;
+export const undefinedSchema: Schema<undefined> = {
+	"~standard": {
+		version: 1,
+		vendor: "surrealize",
+		validate: (value) => {
+			if (value === undefined) return { value };
+			return { issues: [{ message: "Expected undefined" }] };
+		},
+	},
 };
 
 /**
@@ -22,18 +29,30 @@ export const undefinedSchema: SchemaFunction<undefined> = (value: unknown) => {
  * @returns The schema as an array.
  */
 export const convertSchemaArray = <const TSchemaOutput>(
-	schema: SchemaLike<TSchemaOutput>,
-): SchemaLike<TSchemaOutput[]> => {
-	return (value: unknown) => {
+	schema: Schema<TSchemaOutput>,
+): Schema<TSchemaOutput[]> => {
+	const validate = async (
+		value: unknown,
+	): Promise<StandardSchemaV1.Result<TSchemaOutput[]>> => {
 		if (!Array.isArray(value))
-			throw new Error(`Expected array, received: ${typeof value}`);
+			return { issues: [{ message: "Expected array" }] };
+		const results = await Promise.all(
+			value.map((item) => parseSchema(schema, item)),
+		);
+		return { value: results };
+	};
 
-		return value.map((item) => parseSchema(schema, item));
+	return {
+		"~standard": {
+			version: 1,
+			vendor: "surrealize",
+			validate,
+		},
 	};
 };
 
 export const convertSchemaUndefinable = <const TSchemaOutput>(
-	schema: SchemaLike<TSchemaOutput>,
-): SchemaLike<TSchemaOutput | undefined> => {
+	schema: Schema<unknown, TSchemaOutput>,
+): Schema<unknown, TSchemaOutput | undefined> => {
 	return mergeSchema([schema, undefinedSchema]);
 };

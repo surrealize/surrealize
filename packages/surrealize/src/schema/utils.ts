@@ -1,4 +1,6 @@
-import type { SchemaLike } from "./types.ts";
+import type { StandardSchemaV1 } from "@standard-schema/spec";
+
+import { type Schema, ValidationError } from "./types.ts";
 
 /**
  * Validates a value against a schema and returns the validated value.
@@ -9,43 +11,51 @@ import type { SchemaLike } from "./types.ts";
  * @param value The value to validate.
  * @returns The validated value or an error if the validation failed.
  */
-export const parseSchema = <TSchemaOutput>(
-	schema: SchemaLike<TSchemaOutput>,
+export const parseSchema = async <TOutput>(
+	schema: Schema<unknown, TOutput>,
 	value: unknown,
-): TSchemaOutput => {
-	switch (true) {
-		case typeof schema === "function":
-			return schema(value);
-		case typeof schema === "object":
-			// like zod
-			if ("parse" in schema) return schema.parse(value);
-			// like yup
-			if ("validate" in schema) return schema.validate(value);
-	}
-	throw new Error("Invalid schema");
+): Promise<TOutput> => {
+	const standard = schema["~standard"];
+
+	let result = standard.validate(value);
+	if (result instanceof Promise) result = await result;
+
+	if (result.issues) throw new ValidationError(result.issues);
+
+	return result.value;
 };
 
-export const mergeSchema = <TSchemaOutput>(
-	schemas: SchemaLike<TSchemaOutput>[],
-): SchemaLike<TSchemaOutput> => {
-	const errors: unknown[] = [];
+export const mergeSchema = <TInput, TOutput>(
+	schemas: Schema<TInput, TOutput>[],
+): Schema<TInput, TOutput> => {
+	const issues: StandardSchemaV1.Issue[] = [];
 
-	// create a new schema function which will try each schema in order
-	return (value) => {
+	const validate = async (
+		value: unknown,
+	): Promise<StandardSchemaV1.Result<TOutput>> => {
 		for (const schema of schemas) {
-			// try each schema
 			try {
-				return parseSchema(schema, value);
+				const parsedValue = await parseSchema(schema, value);
+				return { value: parsedValue };
 			} catch (error) {
-				errors.push(error);
-				// if the schema fails, try the next one
+				if (error instanceof ValidationError) {
+					issues.push(...error.issues);
+					// if the schema fails, try the next one
+				} else {
+					// throw if the error in unrecognized
+					throw error;
+				}
 			}
 		}
 
-		// if all schemas fail, throw an error
-		throw new Error(
-			"All schemas failed. Expected at least one schema to pass.",
-			{ cause: errors },
-		);
+		return { issues };
+	};
+
+	return {
+		["~standard"]: {
+			version: 1,
+			vendor: "surrealize",
+			validate,
+		},
 	};
 };

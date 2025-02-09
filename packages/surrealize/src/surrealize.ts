@@ -1,33 +1,24 @@
-import Surreal from "surrealdb";
-
+import { Connection } from "./connection/connection.ts";
+import type { EventEmitter } from "./connection/emitter.ts";
+import type { EngineInitializer } from "./connection/engine.ts";
 import {
 	prepareQuery,
 	prepareTransaction,
 	resolveQuery,
 } from "./query/builder.ts";
 import { surql } from "./query/query.ts";
-import { DEFAULT_CODECS } from "./query/transformer/codecs.ts";
-import { Transformer } from "./query/transformer/transformer.ts";
 import type {
 	InferQueriesOutput,
 	QueriesLike,
 	QueryLike,
 } from "./query/types.ts";
-import type { SchemaLike } from "./schema/types.ts";
+import type { Schema } from "./schema/types.ts";
 import { parseSchema } from "./schema/utils.ts";
 import { RecordId } from "./type/recordid.ts";
 import { type TargetLike, resolveTarget } from "./type/target.ts";
 
 export type SurrealizeOptions = {
-	/**
-	 * The underlying surrealdb connection.
-	 */
-	surreal?: Surreal;
-
-	/**
-	 * The transformer to use for encoding and decoding values.
-	 */
-	transformer?: Transformer;
+	url: URL | string;
 
 	/**
 	 * Set the connection as the default connection.
@@ -35,6 +26,15 @@ export type SurrealizeOptions = {
 	 * This will make the Surrealize instance the default instance for all queries.
 	 */
 	default?: boolean;
+
+	/**
+	 * A collection of engines which are available to connect to.
+	 *
+	 * Defaults to the following engines:
+	 * - `ws`: WebSocket
+	 * - `wss`: WebSocket Secure
+	 */
+	engines?: Record<string, EngineInitializer>;
 };
 
 export class Surrealize {
@@ -43,28 +43,24 @@ export class Surrealize {
 	/**
 	 * The underlying SurrealDB connection to execute queries.
 	 */
-	connection: Surreal;
+	connection: Connection;
 
-	/**
-	 * The transformer to use for encoding and decoding values.
-	 */
-	transformer: Transformer;
-
-	constructor(options: SurrealizeOptions = {}) {
-		this.connection = options.surreal ?? new Surreal();
-		this.transformer = options.transformer ?? new Transformer(DEFAULT_CODECS);
+	constructor(options: SurrealizeOptions) {
+		this.connection = new Connection(
+			{ url: options.url instanceof URL ? options.url : new URL(options.url) },
+			{ engines: options.engines },
+		);
 
 		if (options.default) Surrealize.default = this;
 	}
+
 	async execute<TSchemaOutput>(
 		queryLike: QueryLike<TSchemaOutput>,
 	): Promise<TSchemaOutput> {
 		const { template, schema } = resolveQuery(queryLike);
-		const { query, bindings } = prepareQuery(template, this.transformer);
+		const { query, bindings } = prepareQuery(template);
 
-		const [result] = await this.connection
-			.query(query, bindings)
-			.then((result) => result.map((value) => this.transformer.decode(value)));
+		const [result] = await this.connection.query(query, bindings);
 
 		return (schema ? parseSchema(schema, result) : result) as TSchemaOutput;
 	}
@@ -84,11 +80,9 @@ export class Surrealize {
 	): Promise<InferQueriesOutput<TQueries>> {
 		const queries = queriesLike.map((queryLike) => resolveQuery(queryLike));
 
-		const { query, bindings } = prepareTransaction(queries, this.transformer);
+		const { query, bindings } = prepareTransaction(queries);
 
-		const results = await this.connection
-			.query(query, bindings)
-			.then((result) => result.map((value) => this.transformer.decode(value)));
+		const results = await this.connection.query(query, bindings);
 
 		return queries.map(({ schema }, index) => {
 			const queryResult = results[index];
@@ -106,7 +100,7 @@ export class Surrealize {
 	 */
 	async resolve<TOutput>(
 		targetLike: TargetLike,
-		schema?: SchemaLike<TOutput>,
+		schema?: Schema<TOutput>,
 	): Promise<TOutput> {
 		const target = resolveTarget(targetLike);
 

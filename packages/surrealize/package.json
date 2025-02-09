@@ -6,9 +6,7 @@
 	"scripts": {
 		"build": "bun run ./build.ts"
 	},
-	"dependencies": {
-		"surrealdb": "^1.1.0"
-	},
+	"dependencies": {},
 	"devDependencies": {
 		"@surrealdb/wasm": "^1.1.0",
 		"@types/bun": "^1.1.14",

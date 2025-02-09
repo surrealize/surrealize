@@ -1,18 +1,18 @@
-/**
- * A schema validator function which takes a unknown value and validates it.
- *
- * On success, the function should return the validated value.
- * On failure, the function should throw an error.
- */
-export type SchemaFunction<T = unknown> = (value: unknown) => T;
+import type { StandardSchemaV1 } from "@standard-schema/spec";
 
 /**
- * A schema like type which can be a {@link SchemaFunction} or a object with a `parse`/`validate` method.
+ * A schema which implements the Standard Schema V1 specification.
  */
-export type SchemaLike<T = unknown> =
-	| SchemaFunction<T>
-	| Record<"parse", SchemaFunction<T>>
-	| Record<"validate", SchemaFunction<T>>;
+export type Schema<TInput = unknown, TOutput = TInput> = StandardSchemaV1<
+	TInput,
+	TOutput
+>;
 
-export type InferSchemaOutput<TSchemaLike extends SchemaLike> =
-	TSchemaLike extends SchemaLike<infer TSchemaOutput> ? TSchemaOutput : never;
+export type InferSchemaOutput<TSchema extends Schema> =
+	TSchema extends Schema<infer _, infer TOutput> ? TOutput : never;
+
+export class ValidationError extends Error {
+	constructor(public issues: readonly StandardSchemaV1.Issue[]) {
+		super("Validation failed");
+	}
+}
