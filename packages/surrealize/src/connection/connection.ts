@@ -6,6 +6,7 @@ import type {
 } from "./engine.ts";
 import { WebSocketEngine } from "./engines/ws.ts";
 import { DatabaseError, QueryError } from "./error.ts";
+import type { RpcRequest, RpcResponse } from "./rpc.ts";
 
 export type ConnectionContext = {
 	url: URL;
@@ -52,11 +53,15 @@ export class Connection {
 		return this.#engine.connect();
 	}
 
+	async rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>> {
+		return this.#engine.rpc(request);
+	}
+
 	async query<TResult extends unknown[]>(
 		query: string,
 		bindings?: Record<string, unknown>,
 	): Promise<TResult> {
-		const response = await this.#engine.rpc<
+		const response = await this.rpc<
 			Array<{ result: unknown; status: "OK" | "ERR"; time: string }>
 		>({
 			method: "query",

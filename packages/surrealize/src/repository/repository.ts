@@ -4,7 +4,7 @@ import {
 	convertSchemaUndefinable,
 } from "../schema/common.ts";
 import type { SchemaLike } from "../schema/types.ts";
-import type { SelectStatement } from "../statement/select.ts";
+import type { SelectStatement } from "../statement/select.ts.old";
 import type { WhereCondition } from "../statement/shared/where.ts";
 import { Statements } from "../statements.ts";
 import type { Surrealize } from "../surrealize.ts";

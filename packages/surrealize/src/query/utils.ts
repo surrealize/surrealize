@@ -1,52 +1,7 @@
-import { Query, type QueryOptions } from "./query.ts";
-import {
-	type TaggedTemplate,
-	format,
-	isEmpty,
-	merge,
-	tag,
-	tagString,
-} from "./template.ts";
+import { RawQuery } from "./builder/raw.ts";
+import type { Query } from "./query.ts";
+import { type TaggedTemplate, format, merge, tagString } from "./template.ts";
 import { type PreparedQuery, type QueryLike, toQuery } from "./types.ts";
-
-export class QueryBuilder {
-	#template: TaggedTemplate;
-
-	constructor(initialTemplate?: TaggedTemplate) {
-		this.#template = initialTemplate ?? tag``;
-	}
-
-	get template(): TaggedTemplate {
-		return this.#template;
-	}
-
-	/**
-	 * Append a {@link TaggedTemplate} to the query.
-	 *
-	 * @param template The {@link TaggedTemplate} to append.
-	 * @param join The join string to use between the queries.
-	 * @returns The query builder (`this`).
-	 */
-	append(template: TaggedTemplate, join = " "): QueryBuilder {
-		// skip appending if the template is empty
-		if (isEmpty(template)) return this;
-
-		this.#template = merge([this.#template, template], join);
-		return this;
-	}
-
-	/**
-	 * Convert the query to a {@link Query} object which can be executed.
-	 *
-	 * @param options The options to use for the query.
-	 * @returns The query.
-	 */
-	toQuery<TSchemaOutput>(
-		options?: QueryOptions<TSchemaOutput>,
-	): Query<TSchemaOutput> {
-		return new Query(this.template, options);
-	}
-}
 
 export const resolveQuery = <TSchemaOutput>(
 	query: QueryLike<TSchemaOutput>,
@@ -54,7 +9,7 @@ export const resolveQuery = <TSchemaOutput>(
 	if (toQuery in query) {
 		const toQueryValue = query[toQuery]();
 
-		if (toQueryValue instanceof QueryBuilder) {
+		if (toQueryValue instanceof RawQuery) {
 			return toQueryValue.toQuery();
 		}
 
@@ -96,15 +51,15 @@ export const prepareTransaction = (queries: Query[]): PreparedQuery => {
 			merge(
 				// wrap the queries in a transaction
 				[
-					tag`BEGIN`,
+					tagString("BEGIN"),
 					...queries.map((query) =>
 						merge([tagString("("), query.template, tagString(")")]),
 					),
-					tag`COMMIT`,
+					tagString("COMMIT"),
 				],
 				";\n",
 			),
-			tag`;`,
+			tagString(";"),
 		]),
 	);
 };

@@ -4,6 +4,8 @@ export type RpcRequest<
 > = {
 	method: TMethod;
 	params: TParams;
+
+	version?: number;
 };
 
 export type RpcResponse<TResult = unknown> =

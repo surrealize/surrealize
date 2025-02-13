@@ -1,7 +1,8 @@
 import type { ConnectionContext } from "../connection.ts";
 import { AbstractEngine, ConnectionStatus } from "../engine.ts";
 import type { RpcRequest, RpcResponse, WithId } from "../rpc.ts";
-import { getIncrementalNumber, parseUint8Array } from "../utils.ts";
+import { getIncrementalNumber } from "../utils/incremental_number.ts";
+import { ManagedWebSocket } from "../utils/websocket.ts";
 
 type WebSocketEngineConnection = {
 	namespace?: string;
@@ -10,64 +11,43 @@ type WebSocketEngineConnection = {
 };
 
 export class WebSocketEngine extends AbstractEngine {
-	#socket: WebSocket | undefined;
+	#socket: ManagedWebSocket;
 	#connection: WebSocketEngineConnection = {};
 	#context: ConnectionContext;
 
-	ready: Promise<void> = Promise.resolve(void 0);
 	status: ConnectionStatus = ConnectionStatus.DISCONNECTED;
 
 	constructor(context: ConnectionContext) {
 		super();
 		this.#context = context;
+		this.#socket = new ManagedWebSocket(this.#getUrl(), { protocols: "cbor" });
+
+		this.#registerSocketListeners();
+	}
+
+	get ready(): Promise<void> {
+		return this.#socket.ready;
 	}
 
 	connect(): Promise<void> {
-		if (this.#socket) throw new Error("Already connected");
-
-		this.#socket = new WebSocket(this.#getUrl(), "cbor");
-
-		this.#registerSocketListeners();
-
-		this.ready = new Promise<void>((resolve, reject) => {
-			const unsubscribeConnected = this.emitter.once("connected", () => {
-				unsubscribeError();
-				resolve();
-			});
-
-			const unsubscribeError = this.emitter.once("error", (error) => {
-				unsubscribeConnected();
-				reject(error);
-			});
-		});
-
-		return this.ready;
+		return this.#socket.connect();
 	}
 
-	async disconnect(): Promise<void> {
-		this.emitter.emit("disconnecting");
-		this.#socket?.close();
-		this.#socket = undefined;
+	disconnect(): Promise<void> {
+		this.#socket.disconnect();
+		return Promise.resolve();
 	}
 
-	async rpc<TMethod extends string, TParams extends unknown[], TResult>(
-		request: RpcRequest<TMethod, TParams>,
-	): Promise<RpcResponse<TResult>> {
-		console.log("rpc");
-
-		if (!this.#socket) throw new Error("Not connected");
-
-		await this.ready;
-
+	async rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>> {
 		const id = getIncrementalNumber();
 		const responsePromise = this.emitter.waitNext(`rpc-${id}`);
 
-		this.#socket.send(
+		await this.#socket.send(
 			this.encodeCbor({
 				id,
 				method: request.method,
 				params: request.params,
-			} satisfies WithId<RpcRequest<TMethod, TParams>>),
+			} satisfies WithId<RpcRequest>),
 		);
 
 		const [response] = await responsePromise;
@@ -129,30 +109,31 @@ export class WebSocketEngine extends AbstractEngine {
 	}
 
 	#registerSocketListeners() {
-		if (!this.#socket)
-			throw new Error("Cannot register socket listeners without a socket");
+		this.#socket.on("connecting", () => {
+			this.status = ConnectionStatus.CONNECTING;
+			this.emitter.emit("connecting");
+		});
 
-		this.#socket.addEventListener("open", () => {
+		this.#socket.on("connected", () => {
 			this.status = ConnectionStatus.CONNECTED;
 			this.emitter.emit("connected");
 		});
 
-		this.#socket.addEventListener("close", () => {
+		this.#socket.on("disconnecting", () => {
+			this.status = ConnectionStatus.DISCONNECTING;
+			this.emitter.emit("disconnecting");
+		});
+
+		this.#socket.on("disconnected", () => {
 			this.status = ConnectionStatus.DISCONNECTED;
 			this.emitter.emit("disconnected");
 		});
 
-		this.#socket.addEventListener("error", (event) => {
-			if (event instanceof ErrorEvent) {
-				this.emitter.emit("error", event.error);
-			} else {
-				this.emitter.emit("error", new Error("Unknown error"));
-			}
-		});
+		this.#socket.on("error", (error) => this.emitter.emit("error", error));
 
-		this.#socket.addEventListener("message", async ({ data }) => {
+		this.#socket.on("message", async (message) => {
 			try {
-				const decoded = this.decodeCbor(await parseUint8Array(data));
+				const decoded = this.decodeCbor(message);
 
 				if (
 					typeof decoded === "object" &&
@@ -164,7 +145,10 @@ export class WebSocketEngine extends AbstractEngine {
 					throw new Error("Unexpected response");
 				}
 			} catch (error) {
-				this.#socket?.dispatchEvent(new ErrorEvent("error", { error }));
+				this.#socket.emit(
+					"error",
+					error instanceof Error ? error : new Error("Unknown error"),
+				);
 			}
 		});
 	}

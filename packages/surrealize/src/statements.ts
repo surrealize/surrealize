@@ -1,6 +1,6 @@
 import { CreateStatement } from "./statement/create.ts";
 import { DeleteStatement } from "./statement/delete.ts";
-import { SelectStatement } from "./statement/select.ts";
+import { SelectStatement } from "./statement/select.ts.old";
 import type { StatementOptions } from "./statement/shared/statement.ts";
 import { UpdateStatement } from "./statement/update.ts";
 import { UpsertStatement } from "./statement/upsert.ts";

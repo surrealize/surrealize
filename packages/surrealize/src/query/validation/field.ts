@@ -11,7 +11,10 @@ const fieldWithWildcardRegex = /^(([\w\d]+|\*)\.)*([\w\d]+|\*)$/;
 export const enforceField = <TField extends string>(
 	field: TField,
 	mode: "normal" | "wildcard" = "normal",
-): TField => {
+): string => {
+	if (typeof field !== "string")
+		throw new Error(`Invalid field: ${String(field)}`);
+
 	switch (mode) {
 		case "wildcard":
 			if (fieldWithWildcardRegex.test(field)) return field;
