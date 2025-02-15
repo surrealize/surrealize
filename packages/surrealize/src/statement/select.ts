@@ -10,9 +10,10 @@ import {
 	enforceFields,
 } from "../query/validation/field.ts";
 import { type TargetLike, resolveTarget } from "../type/target.ts";
+import { type WhereCondition, buildWhere } from "./shared/where.ts";
 
 export const select = <TSchema>() =>
-	createStatement((raw) => {
+	createStatement((raw, ctx) => {
 		return (
 			...fields: InferFields<TSchema>[]
 		): Builder<{
@@ -25,12 +26,12 @@ export const select = <TSchema>() =>
 				),
 			);
 
-			return createBuilder(appended, { from, fromOnly });
+			return createBuilder(appended, ctx, { from, fromOnly });
 		};
 	});
 
 export const selectValue = <TSchema>() =>
-	createStatement((raw) => {
+	createStatement((raw, ctx) => {
 		return (
 			field: InferFields<TSchema>,
 		): Builder<{
@@ -41,13 +42,13 @@ export const selectValue = <TSchema>() =>
 				tagString(`SELECT VALUE ${enforceField(field, "wildcard")}`),
 			);
 
-			return createBuilder(appended, { from, fromOnly });
+			return createBuilder(appended, ctx, { from, fromOnly });
 		};
 	});
 
 const from = <TSchema>() =>
 	createStatement(
-		(raw) =>
+		(raw, ctx) =>
 			(
 				...targets: TargetLike[]
 			): Builder<{
@@ -66,24 +67,46 @@ const from = <TSchema>() =>
 							" ",
 						),
 					),
+					ctx,
 					{ parallel },
 				),
 	);
 
 const fromOnly = <TSchema>() =>
 	createStatement(
-		(raw) =>
+		(raw, ctx) =>
 			(
 				target: TargetLike,
 			): Builder<{
+				where: typeof where<TSchema>;
 				parallel: typeof parallel<TSchema>;
 			}> =>
-				createBuilder(raw.append(tag`FROM ONLY ${resolveTarget(target)}`), {
+				createBuilder(
+					raw.append(tag`FROM ONLY ${resolveTarget(target)}`),
+					ctx,
+					{
+						where,
+						parallel,
+					},
+				),
+	);
+
+const where = <TSchema>() =>
+	createStatement(
+		(raw, ctx) =>
+			(
+				...conditions: WhereCondition<TSchema>[]
+			): Builder<{
+				parallel: typeof parallel<TSchema>;
+			}> => {
+				return createBuilder(raw.append(buildWhere(conditions)), ctx, {
 					parallel,
-				}),
+				});
+			},
 	);
 
 const parallel = <TSchema>() =>
 	createStatement(
-		(raw) => () => createBuilder(raw.append(tagString("PARALLEL")), {}),
+		(raw, ctx) => () =>
+			createBuilder(raw.append(tagString("PARALLEL")), ctx, {}),
 	);

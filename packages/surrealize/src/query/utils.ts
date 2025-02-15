@@ -1,13 +1,13 @@
 import { RawQuery } from "./builder/raw.ts";
 import type { Query } from "./query.ts";
 import { type TaggedTemplate, format, merge, tagString } from "./template.ts";
-import { type PreparedQuery, type QueryLike, toQuery } from "./types.ts";
+import { type PreparedQuery, type QueryLike } from "./types.ts";
 
-export const resolveQuery = <TSchemaOutput>(
-	query: QueryLike<TSchemaOutput>,
-): Query<TSchemaOutput> => {
-	if (toQuery in query) {
-		const toQueryValue = query[toQuery]();
+export const resolveQuery = <TOutput>(
+	query: QueryLike<TOutput>,
+): Query<TOutput> => {
+	if ("~ctx" in query) {
+		const toQueryValue = query["~ctx"].toQuery();
 
 		if (toQueryValue instanceof RawQuery) {
 			return toQueryValue.toQuery();

@@ -24,10 +24,10 @@ export type CompareOperator =
 	| ">" /* greater than */
 	| ">=" /* greater than or equal */;
 
-export type WhereCondition<TSchemaOutput = unknown> =
-	| WhereCompare<InferFields<TSchemaOutput>>
-	| WhereAnd<TSchemaOutput>
-	| WhereOr<TSchemaOutput>;
+export type WhereCondition<TSchema = unknown> =
+	| WhereCompare<InferFields<TSchema>>
+	| WhereAnd<TSchema>
+	| WhereOr<TSchema>;
 
 export type WhereCompare<
 	TField extends string = string,
@@ -35,13 +35,13 @@ export type WhereCompare<
 	TValue = unknown,
 > = { type: "cmp"; field: TField; operator: TOperator; value: TValue };
 
-export type WhereAnd<TSchemaOutput = unknown> = {
+export type WhereAnd<TSchema = unknown> = {
 	type: "and";
-	conditions: WhereCondition<TSchemaOutput>[];
+	conditions: WhereCondition<TSchema>[];
 };
-export type WhereOr<TSchemaOutput = unknown> = {
+export type WhereOr<TSchema = unknown> = {
 	type: "or";
-	conditions: WhereCondition<TSchemaOutput>[];
+	conditions: WhereCondition<TSchema>[];
 };
 
 export const buildWhere = (conditions: WhereCondition[]): TaggedTemplate => {
@@ -87,9 +87,9 @@ const formatCondition = (condition: WhereCondition): TaggedTemplate => {
  * @param conditions The conditions to combine.
  * @returns The `AND` condition.
  */
-export const and = <TSchemaOutput = unknown>(
-	...conditions: WhereCondition<TSchemaOutput>[]
-): WhereAnd<TSchemaOutput> => {
+export const and = <TSchema = unknown>(
+	...conditions: WhereCondition<TSchema>[]
+): WhereAnd<TSchema> => {
 	return { type: "and", conditions };
 };
 
@@ -99,9 +99,9 @@ export const and = <TSchemaOutput = unknown>(
  * @param conditions The conditions to combine.
  * @returns The `OR` condition.
  */
-export const or = <TSchemaOutput = unknown>(
-	...conditions: WhereCondition<TSchemaOutput>[]
-): WhereOr<TSchemaOutput> => {
+export const or = <TSchema = unknown>(
+	...conditions: WhereCondition<TSchema>[]
+): WhereOr<TSchema> => {
 	return { type: "or", conditions };
 };
 

@@ -1,7 +1,14 @@
 import type { RawQuery } from "./builder/raw.ts";
 import type { Query } from "./query.ts";
 
+/**
+ * @deprecated Use "~query" instead.
+ */
 export const toQuery = Symbol("toQuery");
+
+/**
+ * @deprecated Not needed anymore.
+ */
 export const buildQuery = Symbol("buildQuery");
 
 export type PreparedQuery = {
@@ -10,13 +17,13 @@ export type PreparedQuery = {
 };
 
 /**
- * A queryable is an object which has the {@link toQuery} symbol.
+ * A queryable is an object which has a context containing the `toQuery` function.
  *
- * This property returns a {@link Query} or a {@link RawQuery}.
+ * This function returns a {@link Query} or a {@link RawQuery}.
  */
 export type Queryable<TSchemaOutput = unknown> = Record<
-	typeof toQuery,
-	() => Query<TSchemaOutput> | RawQuery
+	"~ctx",
+	{ toQuery: () => Query<TSchemaOutput> | RawQuery }
 >;
 
 /**
