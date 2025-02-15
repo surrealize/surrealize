@@ -1,12 +1,13 @@
 import { type Query, QueryList } from "../query/query.ts";
 import {
+	alwaysTo,
 	convertSchemaArray,
 	convertSchemaUndefinable,
 } from "../schema/common.ts";
-import type { SchemaLike } from "../schema/types.ts";
-import type { SelectStatement } from "../statement/select.ts.old";
+import type { Schema } from "../schema/types.ts";
+import type { ContentLike, SetLike } from "../statement/shared/data.ts";
 import type { WhereCondition } from "../statement/shared/where.ts";
-import { Statements } from "../statements.ts";
+import { type DefaultBuilder, createDefaultBuilder, q } from "../statements.ts";
 import type { Surrealize } from "../surrealize.ts";
 import type { AnyRecord, Record } from "../type/record.ts";
 import { RecordId, type RecordIdLike } from "../type/recordid.ts";
@@ -25,8 +26,36 @@ import { convertFilterObjectToConditions } from "./utils.ts";
 
 export type RepositoryOptions<TRecord extends Record> = {
 	connection?: Surrealize;
-	schema?: SchemaLike<TRecord>;
+	schema?: Schema<TRecord>;
 };
+
+// TODO rething repo api.
+// Get inspire by mongodb api
+
+/**
+ *
+ * findOne (filter: RepositoryWhere<TRecord>, options: ...): Promise<TRecord | undefined>
+ * findMany (filter: RepositoryWhere<TRecord>, options: ...): Promise<TRecord[]>
+ *
+ * createOne (record: TRecord, options: ...): Promise<TRecord>
+ * createMany (records: TRecord[], options: ...): Promise<TRecord[]>
+ *
+ * upsertOne (record: TRecord, options: ...): Promise<TRecord>
+ * upsertMany (records: TRecord[], options: ...): Promise<TRecord[]>
+ *
+ * updateOne (filter: RepositoryWhere<TRecord>, update: Partial<TRecord>, options: ...): Promise<TRecord>
+ * updateMany (filter: RepositoryWhere<TRecord>, update: Partial<TRecord>, options: ...): Promise<TRecord[]>
+ *
+ * deleteOne (filter: RepositoryWhere<TRecord>, options: ...): Promise<TRecord>
+ * deleteMany (filter: RepositoryWhere<TRecord>, options: ...): Promise<TRecord[]>
+ *
+ * - Additional methods?
+ *
+ * count (filter: RepositoryWhere<TRecord>): Promise<number>
+ *
+ */
+
+//
 
 /**
  * An repository is an easy to use interface to communicate with the database.
@@ -39,7 +68,7 @@ export class Repository<
 > {
 	readonly table: Table<TTable>;
 	readonly options: RepositoryOptions<TRecord>;
-	readonly q: Statements<TRecord>;
+	readonly q: DefaultBuilder<TRecord>;
 
 	constructor(
 		table: TableLike<TTable>,
@@ -47,7 +76,7 @@ export class Repository<
 	) {
 		this.table = Table.from(table);
 		this.options = options;
-		this.q = new Statements({
+		this.q = createDefaultBuilder({
 			connection: options.connection,
 			schema: options.schema,
 		});
@@ -131,13 +160,13 @@ export class Repository<
 
 	create(record: PartialOnly<TRecord, "id">): Query<TRecord> {
 		if (record.id) {
-			return this.q
+			return q
 				.createOnly(record.id)
 				.content(record)
 				.toQuery()
 				.withSchema(this.options.schema);
 		} else {
-			return this.q
+			return q
 				.create(this.table)
 				.content(record)
 				.toQuery()
@@ -155,7 +184,7 @@ export class Repository<
 	}
 
 	update(record: TRecord): Query<TRecord> {
-		return this.q
+		return q
 			.updateOnly(record.id)
 			.content(record)
 			.toQuery()
@@ -175,8 +204,8 @@ export class Repository<
 	): Query<TRecord> {
 		return this.q
 			.update(this.table)
+			.set(flatten(partialRecord) as SetLike<TRecord>)
 			.where(...this.getWhereConditions(where))
-			.set(flatten(partialRecord))
 			.toQuery();
 	}
 
@@ -184,13 +213,16 @@ export class Repository<
 		id: RecordIdLike<TTable>,
 		partialRecord: Partial<TRecord>,
 	): Query<TRecord> {
-		return this.q.updateOnly(id).set(flatten(partialRecord)).toQuery();
+		return this.q
+			.updateOnly(id)
+			.set(flatten(partialRecord) as SetLike<TRecord>)
+			.toQuery();
 	}
 
 	upsert(record: TRecord): Query<TRecord> {
 		return this.q
 			.upsertOnly(record.id)
-			.content(record)
+			.content(record as ContentLike<TRecord>)
 			.toQuery()
 			.withSchema(this.options.schema);
 	}
@@ -226,28 +258,28 @@ export class Repository<
 
 	deleteBy(where: RepositoryWhere<TRecord>): Query<undefined> {
 		return (
-			this.q
+			q
 				.delete(this.table)
 				.where(...this.getWhereConditions(where))
 				.toQuery()
 				// skip schema validation and always return undefined
 				// because it deletes the record
-				.withSchema(() => undefined)
+				.withSchema(alwaysTo(undefined))
 		);
 	}
 
 	deleteById(id: RecordIdLike<TTable>): Query<undefined> {
 		return (
-			this.q
+			q
 				.delete(id)
 				.toQuery()
 				// skip schema validation and always return undefined
 				// because it deletes the record
-				.withSchema(() => undefined)
+				.withSchema(alwaysTo(undefined))
 		);
 	}
 
-	private getWhereConditions<T = unknown>(
+	private getWhereConditions<T = TRecord>(
 		where: RepositoryWhere<T>,
 	): WhereCondition<T>[] {
 		if (Array.isArray(where)) {
@@ -269,36 +301,40 @@ export class Repository<
 		options: RepositoryRawQueryOptions<TQuerySchemaOutput>,
 	): Query<TQuerySchemaOutput> {
 		// build the query
-		let query = (
-			options.one
-				? // if only one record should be returned, use `fromOnly` and limit to 1
-					this.q
-						.select()
-						.fromOnly(options.target ?? this.table)
-						.limit(1)
-				: // else use normal `from`
-					this.q.select().from(options.target ?? this.table)
-		) as SelectStatement<object>;
+		let query = options.one
+			? // if only one record should be returned, use `fromOnly` and limit to 1
+				q.select().fromOnly(options.target ?? this.table)
+			: // else use normal `from`
+				q.select().from(options.target ?? this.table);
+
+		type Builder = typeof query;
+		// Ensure statements are called in the right order
 
 		// apply where conditions
 		if (options.where) {
-			query = query.where(...this.getWhereConditions(options.where));
+			query = query.where(...this.getWhereConditions(options.where)) as Builder;
 		}
 
-		// apply limit (only if not a `one` query)
-		if (options.limit && !options.one) query = query.limit(options.limit);
+		// apply limit
+		if (options.one) {
+			// limit to 1 if only one record should be returned
+			query = query.limit(1) as Builder;
+		} else if (options.limit) {
+			// otherwise limit to the specified limit, if provided
+			query = query.limit(options.limit) as Builder;
+		}
 
 		// apply start
-		if (options.start) query = query.start(options.start);
-
-		// apply parallel
-		if (options.parallel) query = query.parallel();
-
-		// apply tempfiles
-		if (options.tempfiles) query = query.tempfiles();
+		if (options.start) query = query.start(options.start) as Builder;
 
 		// apply timeout
-		if (options.timeout) query = query.timeout(options.timeout);
+		if (options.timeout) query = query.timeout(options.timeout) as Builder;
+
+		// apply parallel
+		if (options.parallel) query = query.parallel() as Builder;
+
+		// apply tempfiles
+		if (options.tempfiles) query = query.tempfiles() as Builder;
 
 		return query.toQuery().with({
 			// converts the schema to an array schema because we expect an array of results

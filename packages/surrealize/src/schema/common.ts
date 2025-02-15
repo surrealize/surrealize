@@ -21,6 +21,20 @@ export const undefinedSchema: Schema<undefined> = {
 };
 
 /**
+ * Get a schema which always returns the specified value.
+ *
+ * @param value The value to return.
+ * @returns A schema which always returns the specified value.
+ */
+export const alwaysTo = <T>(value: T): Schema<T> => ({
+	"~standard": {
+		version: 1,
+		vendor: "surrealize",
+		validate: () => ({ value }),
+	},
+});
+
+/**
  * Converts a schema to an array schema.
  *
  * For example: A `User` schema will be converted to an `User[]` schema.
@@ -51,8 +65,8 @@ export const convertSchemaArray = <const TSchemaOutput>(
 	};
 };
 
-export const convertSchemaUndefinable = <const TSchemaOutput>(
-	schema: Schema<unknown, TSchemaOutput>,
-): Schema<unknown, TSchemaOutput | undefined> => {
+export const convertSchemaUndefinable = <TSchema>(
+	schema: Schema<TSchema>,
+): Schema<TSchema | undefined> => {
 	return mergeSchema([schema, undefinedSchema]);
 };

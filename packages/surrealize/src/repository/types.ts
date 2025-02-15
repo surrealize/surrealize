@@ -1,4 +1,4 @@
-import type { SchemaLike } from "../schema/types.ts";
+import type { Schema } from "../schema/types.ts";
 import type { WhereCondition } from "../statement/shared/where.ts";
 import type { DurationLike } from "../type/duration.ts";
 import type { TargetLike } from "../type/target.ts";
@@ -55,5 +55,5 @@ export type RepositoryRawQueryOptions<TSchemaOutput> = {
 	tempfiles?: boolean;
 	timeout?: DurationLike;
 
-	schema?: SchemaLike<TSchemaOutput>;
+	schema?: Schema<TSchemaOutput>;
 };

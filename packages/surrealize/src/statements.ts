@@ -4,6 +4,8 @@ import type { Schema } from "./schema/types.ts";
 import { create, createOnly } from "./statement/create.ts";
 import { deleteOnly, delete_ } from "./statement/delete.ts";
 import { select, selectValue } from "./statement/select.ts";
+import { update, updateOnly } from "./statement/update.ts";
+import { upsert, upsertOnly } from "./statement/upsert.ts";
 import type { Surrealize } from "./surrealize.ts";
 
 const statements = {
@@ -15,9 +17,15 @@ const statements = {
 
 	select,
 	selectValue,
+
+	update,
+	updateOnly,
+
+	upsert,
+	upsertOnly,
 };
 
-type DefaultBuilder<TSchema = unknown> = Builder<
+export type DefaultBuilder<TSchema = unknown> = Builder<
 	{
 		create: typeof create<TSchema>;
 		createOnly: typeof createOnly<TSchema>;
@@ -27,13 +35,19 @@ type DefaultBuilder<TSchema = unknown> = Builder<
 
 		select: typeof select<TSchema>;
 		selectValue: typeof selectValue<TSchema>;
+
+		update: typeof update<TSchema>;
+		updateOnly: typeof updateOnly<TSchema>;
+
+		upsert: typeof upsert<TSchema>;
+		upsertOnly: typeof upsertOnly<TSchema>;
 	},
 	TSchema
 >;
 
 export const q: DefaultBuilder = createBuilder(new RawQuery(), {}, statements);
 
-export const createStatements = <TSchema>(options?: {
+export const createDefaultBuilder = <TSchema>(options?: {
 	schema?: Schema<TSchema>;
 	connection?: Surrealize;
 }): DefaultBuilder<TSchema> => {

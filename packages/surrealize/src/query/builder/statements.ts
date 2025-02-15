@@ -5,7 +5,7 @@ import type { RawQuery } from "./raw.ts";
 
 export type StatementFn = (
 	...args: any[]
-) => Builder<any, any> | Builder<{}, any>;
+) => AnyBuilder<never> | AnyBuilder<string>;
 
 export type BuilderContext<TSchema = unknown> = {
 	schema?: Schema<TSchema>;
@@ -15,10 +15,11 @@ export type BuilderContext<TSchema = unknown> = {
 export type BuilderOptions<TSchema = unknown> = {
 	toQuery: () => Query<TSchema>;
 
-	["~ctx"]: {
+	["~query"]: {
 		raw: RawQuery;
 		toQuery: () => Query<TSchema>;
-	} & BuilderContext<TSchema>;
+		ctx: BuilderContext<TSchema>;
+	};
 };
 
 export type Statement<TFn extends StatementFn = StatementFn> = (
@@ -39,6 +40,11 @@ export type Builder<
 		? TFn
 		: never;
 } & BuilderOptions<TSchema>;
+
+export type AnyBuilder<T extends string> = Builder<
+	{ [key in T]: LazyStatement },
+	unknown
+>;
 
 export const createStatement = <const TFn extends StatementFn>(
 	statement: Statement<TFn>,
@@ -66,10 +72,10 @@ export const createBuilder = <
 
 		toQuery: toQueryFn,
 
-		"~ctx": {
+		"~query": {
 			toQuery: toQueryFn,
 			raw,
-			...ctx,
+			ctx,
 		},
 	} as Builder<TStatements, TSchema>;
 };

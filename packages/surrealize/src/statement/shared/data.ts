@@ -8,14 +8,21 @@ import { type Field, enforceField } from "../../query/validation/field.ts";
 
 export type Data<TSchema> =
 	| { type: "content"; content: ContentLike<TSchema> }
+	| { type: "replace"; replace: ReplaceLike<TSchema> }
 	| { type: "set"; set: SetLike<TSchema> }
+	| { type: "unset"; unset: UnsetLike<TSchema> }
 	| { type: "merge"; merge: MergeLike<TSchema> }
 	| { type: "patch"; patch: PatchLike<TSchema> };
 
 export type ContentLike<TSchema> =
 	TSchema extends Record<string, unknown> ? TSchema : Record<string, unknown>;
 
+export type ReplaceLike<TSchema> =
+	TSchema extends Record<string, unknown> ? TSchema : Record<string, unknown>;
+
 export type SetLike<TSchema> = Record<Field<TSchema>, unknown>;
+
+export type UnsetLike<TSchema> = Field<TSchema>[];
 
 // TODO types
 export type MergeLike<TSchema> = Record<string, unknown>;
@@ -27,6 +34,8 @@ export const buildData = <TSchema>(data: Data<TSchema>): TaggedTemplate => {
 	switch (data.type) {
 		case "content":
 			return tag`CONTENT ${data.content}`;
+		case "replace":
+			return tag`REPLACE ${data.replace}`;
 		case "set":
 			return merge(
 				[
@@ -35,6 +44,17 @@ export const buildData = <TSchema>(data: Data<TSchema>): TaggedTemplate => {
 						Object.entries(data.set).map(([field, value]) =>
 							merge([tagString(`${enforceField(field)} = `), tag`${value}`]),
 						),
+						", ",
+					),
+				],
+				" ",
+			);
+		case "unset":
+			return merge(
+				[
+					tagString("UNSET"),
+					merge(
+						data.unset.map((field) => tagString(enforceField(field))),
 						", ",
 					),
 				],
