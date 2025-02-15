@@ -1,15 +1,11 @@
 import { EventEmitter } from "../emitter.ts";
+import { ConnectionStatus } from "../engine.ts";
 import { parseUint8Array } from "./incremental_number.ts";
-
-export enum WebSocketStatus {
-	CONNECTING = 0,
-	CONNECTED = 1,
-	DISCONNECTING = 2,
-	DISCONNECTED = 3,
-}
 
 export type WebSocketOptions = {
 	protocols?: string | string[];
+
+	reconnectTimeout?: number;
 };
 
 type WebSocketEvents = {
@@ -28,7 +24,7 @@ export class ManagedWebSocket extends EventEmitter<WebSocketEvents> {
 	#options: WebSocketOptions;
 
 	#closed: boolean = true;
-	#retries: number = 0;
+	#waitReconnect: boolean = false;
 
 	constructor(url: URL, options: WebSocketOptions = {}) {
 		super();
@@ -39,18 +35,19 @@ export class ManagedWebSocket extends EventEmitter<WebSocketEvents> {
 		this.on("disconnected", () => this.#handleReconnect());
 	}
 
-	get status(): WebSocketStatus {
-		if (!this.#socket) return WebSocketStatus.DISCONNECTED;
+	get status(): ConnectionStatus {
+		if (this.#waitReconnect) return ConnectionStatus.CONNECTING;
+		if (!this.#socket) return ConnectionStatus.DISCONNECTED;
 
 		switch (this.#socket.readyState) {
 			case WebSocket.CONNECTING:
-				return WebSocketStatus.CONNECTING;
+				return ConnectionStatus.CONNECTING;
 			case WebSocket.OPEN:
-				return WebSocketStatus.CONNECTED;
+				return ConnectionStatus.CONNECTED;
 			case WebSocket.CLOSING:
-				return WebSocketStatus.DISCONNECTING;
+				return ConnectionStatus.DISCONNECTING;
 			case WebSocket.CLOSED:
-				return WebSocketStatus.DISCONNECTED;
+				return ConnectionStatus.DISCONNECTED;
 		}
 
 		throw new Error(
@@ -61,31 +58,21 @@ export class ManagedWebSocket extends EventEmitter<WebSocketEvents> {
 	get ready(): Promise<void> {
 		return new Promise((resolve, reject) => {
 			if (this.#closed) return reject(new Error("Socket is closed"));
-			if (this.status === WebSocketStatus.CONNECTED) return resolve();
 
-			let fulfilled = false;
+			const unsub = this.once("connected", () => resolve());
 
-			const unsub = this.once("connected", () => {
-				if (fulfilled) return;
-				fulfilled = true;
-				resolve();
-				clearTimeout(timeout);
-			});
-
-			const timeout = setTimeout(() => {
-				if (fulfilled) return;
-				fulfilled = true;
-				reject(new Error("Timeout"));
+			if (this.status === ConnectionStatus.CONNECTED) {
 				unsub();
-			});
+				resolve();
+			}
 		});
 	}
 
-	connect(): Promise<void> {
-		if (this.#socket)
-			return Promise.reject(new Error("There is already a socket"));
+	async connect(): Promise<void> {
+		if (this.#socket) throw new Error("There is already a socket");
 
 		this.#closed = false;
+		this.#waitReconnect = false;
 		this.emit("connecting");
 		this.#socket = new WebSocket(this.#url, this.#options.protocols);
 
@@ -95,9 +82,10 @@ export class ManagedWebSocket extends EventEmitter<WebSocketEvents> {
 	}
 
 	disconnect(): void {
-		if (!this.#socket) return;
-
+		this.#waitReconnect = false;
 		this.#closed = true;
+
+		if (!this.#socket) return;
 
 		if (
 			this.#socket.readyState !== WebSocket.CLOSED &&
@@ -125,7 +113,7 @@ export class ManagedWebSocket extends EventEmitter<WebSocketEvents> {
 
 		this.#socket.addEventListener("error", (event) =>
 			event instanceof ErrorEvent
-				? this.emit("error", event.error)
+				? this.emit("error", new Error(event.message, { cause: event.error }))
 				: this.emit("error", new Error("Unknown error")),
 		);
 
@@ -138,11 +126,14 @@ export class ManagedWebSocket extends EventEmitter<WebSocketEvents> {
 		// if socket is closed by purpose, don't reconnect
 		if (this.#closed) return;
 
-		this.disconnect();
+		this.#socket?.close();
+		this.#socket = null;
+
+		this.#waitReconnect = true;
 
 		setTimeout(() => {
+			if (this.#closed) return;
 			this.connect();
-			this.#retries++;
-		}, 1000);
+		}, this.#options.reconnectTimeout ?? 1000);
 	}
 }

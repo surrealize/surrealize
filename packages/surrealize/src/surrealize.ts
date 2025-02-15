@@ -1,17 +1,16 @@
 import { Connection } from "./connection/connection.ts";
-import type { EventEmitter } from "./connection/emitter.ts";
 import type { EngineInitializer } from "./connection/engine.ts";
-import {
-	prepareQuery,
-	prepareTransaction,
-	resolveQuery,
-} from "./query/builder.ts";
 import { surql } from "./query/query.ts";
 import type {
 	InferQueriesOutput,
 	QueriesLike,
 	QueryLike,
 } from "./query/types.ts";
+import {
+	prepareQuery,
+	prepareTransaction,
+	resolveQuery,
+} from "./query/utils.ts";
 import type { Schema } from "./schema/types.ts";
 import { parseSchema } from "./schema/utils.ts";
 import { RecordId } from "./type/recordid.ts";

@@ -8,9 +8,6 @@ export type Schema<TInput = unknown, TOutput = TInput> = StandardSchemaV1<
 	TOutput
 >;
 
-// TODO good schema handling?
-export type SchemaWithOutput<TOutput = unknown> = Schema<unknown, TOutput>;
-
 export type InferSchemaOutput<TSchema extends Schema> =
 	TSchema extends Schema<infer _, infer TOutput> ? TOutput : never;
 

@@ -4,30 +4,35 @@ import {
 	tag,
 	tagString,
 } from "../../query/template.ts";
-import type { Encodeable } from "../../query/transformer/transformer.ts";
-import { enforceField } from "../../query/validation/field.ts";
+import { type Field, enforceField } from "../../query/validation/field.ts";
 
-export type DataState =
-	| { type: "content"; content: ContentLike }
-	| { type: "set"; set: SetLike }
-	| { type: "merge"; merge: MergeLike }
-	| { type: "patch"; patch: PatchLike };
+export type Data<TSchema> =
+	| { type: "content"; content: ContentLike<TSchema> }
+	| { type: "set"; set: SetLike<TSchema> }
+	| { type: "merge"; merge: MergeLike<TSchema> }
+	| { type: "patch"; patch: PatchLike<TSchema> };
 
-export type ContentLike = Record<string, unknown> | Encodeable;
-export type SetLike = Record<string, unknown>;
-export type MergeLike = Record<string, unknown>;
-export type PatchLike = Record<string, unknown>;
+export type ContentLike<TSchema> =
+	TSchema extends Record<string, unknown> ? TSchema : Record<string, unknown>;
 
-export const buildData = (dataState: DataState): TaggedTemplate => {
-	switch (dataState.type) {
+export type SetLike<TSchema> = Record<Field<TSchema>, unknown>;
+
+// TODO types
+export type MergeLike<TSchema> = Record<string, unknown>;
+
+// TODO types
+export type PatchLike<TSchema> = Record<string, unknown>;
+
+export const buildData = <TSchema>(data: Data<TSchema>): TaggedTemplate => {
+	switch (data.type) {
 		case "content":
-			return tag`CONTENT ${dataState.content}`;
+			return tag`CONTENT ${data.content}`;
 		case "set":
 			return merge(
 				[
 					tagString("SET"),
 					merge(
-						Object.entries(dataState.set).map(([field, value]) =>
+						Object.entries(data.set).map(([field, value]) =>
 							merge([tagString(`${enforceField(field)} = `), tag`${value}`]),
 						),
 						", ",
@@ -36,9 +41,9 @@ export const buildData = (dataState: DataState): TaggedTemplate => {
 				" ",
 			);
 		case "merge":
-			return tag`MERGE ${dataState.merge}`;
+			return tag`MERGE ${data.merge}`;
 		case "patch":
-			return tag`PATCH ${dataState.patch}`;
+			return tag`PATCH ${data.patch}`;
 		default:
 			throw new Error("Invalid data type");
 	}

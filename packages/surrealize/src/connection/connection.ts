@@ -1,6 +1,7 @@
 import type { EventEmitter } from "./emitter.ts";
 import type {
 	AbstractEngine,
+	ConnectionStatus,
 	EmitterEvents,
 	EngineInitializer,
 } from "./engine.ts";
@@ -49,8 +50,16 @@ export class Connection {
 		this.emitter = this.#engine.emitter;
 	}
 
+	get status(): ConnectionStatus {
+		return this.#engine.status;
+	}
+
 	async connect(): Promise<void> {
 		return this.#engine.connect();
+	}
+
+	async disconnect(): Promise<void> {
+		return this.#engine.disconnect();
 	}
 
 	async rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>> {

@@ -15,14 +15,16 @@ export class WebSocketEngine extends AbstractEngine {
 	#connection: WebSocketEngineConnection = {};
 	#context: ConnectionContext;
 
-	status: ConnectionStatus = ConnectionStatus.DISCONNECTED;
-
 	constructor(context: ConnectionContext) {
 		super();
 		this.#context = context;
 		this.#socket = new ManagedWebSocket(this.#getUrl(), { protocols: "cbor" });
 
 		this.#registerSocketListeners();
+	}
+
+	get status(): ConnectionStatus {
+		return this.#socket.status;
 	}
 
 	get ready(): Promise<void> {
@@ -109,26 +111,10 @@ export class WebSocketEngine extends AbstractEngine {
 	}
 
 	#registerSocketListeners() {
-		this.#socket.on("connecting", () => {
-			this.status = ConnectionStatus.CONNECTING;
-			this.emitter.emit("connecting");
-		});
-
-		this.#socket.on("connected", () => {
-			this.status = ConnectionStatus.CONNECTED;
-			this.emitter.emit("connected");
-		});
-
-		this.#socket.on("disconnecting", () => {
-			this.status = ConnectionStatus.DISCONNECTING;
-			this.emitter.emit("disconnecting");
-		});
-
-		this.#socket.on("disconnected", () => {
-			this.status = ConnectionStatus.DISCONNECTED;
-			this.emitter.emit("disconnected");
-		});
-
+		this.#socket.on("connecting", () => this.emitter.emit("connecting"));
+		this.#socket.on("connected", () => this.emitter.emit("connected"));
+		this.#socket.on("disconnecting", () => this.emitter.emit("disconnecting"));
+		this.#socket.on("disconnected", () => this.emitter.emit("disconnected"));
 		this.#socket.on("error", (error) => this.emitter.emit("error", error));
 
 		this.#socket.on("message", async (message) => {

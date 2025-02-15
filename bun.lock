@@ -205,7 +205,7 @@
 
     "@std/cbor": ["@jsr/std__cbor@0.1.6", "https://npm.jsr.io/~/11/@jsr/std__cbor/0.1.6.tgz", { "dependencies": { "@jsr/std__bytes": "^1.0.4", "@jsr/std__streams": "^1.0.8" } }, "sha512-tno5Axza16couUuciF5GqBhw2xZRBY7oDNX7ANh0ckwccx1xpg06iowCO+Y9On0uhK4gsGeOPTLJLTF+bzrkAA=="],
 
-    "@std/semver": ["@jsr/std__semver@1.0.3", "https://npm.jsr.io/~/11/@jsr/std__semver/1.0.3.tgz", {}, "sha512-d1uBT0Muxhd3yBIw9ZE1Q/4N1Y0td0EJe1AqwM3hP05IMwaWQV/miksQOPR3rup3bVovuIvqBm7WJcoUripdQA=="],
+    "@std/semver": ["@jsr/std__semver@1.0.4", "https://npm.jsr.io/~/11/@jsr/std__semver/1.0.4.tgz", {}, "sha512-QdKjWkoc/OSr+e5OkMX6jCuy9+QFU3xb3InOESUnrfUmI2iC0zbXxq7m2GNkvEAwpqmrSqanDhrgkqETgk8TFA=="],
 
     "@surrealdb/wasm": ["@surrealdb/wasm@1.1.0", "", { "peerDependencies": { "surrealdb": "^1.1.0" } }, "sha512-RdycF2m8yl/AShP3vQrloXTS1v9VtCWpRnlQpm7m5Rpc3ItsnwVtu6czumcnRcNdO0EXx61GVKEBX8b/s4iZug=="],
 
@@ -419,7 +419,7 @@
 
     "postcss-load-config": ["postcss-load-config@6.0.1", "", { "dependencies": { "lilconfig": "^3.1.1" }, "peerDependencies": { "jiti": ">=1.21.0", "postcss": ">=8.0.9", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["jiti", "postcss", "tsx", "yaml"] }, "sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g=="],
 
-    "prettier": ["prettier@3.5.0", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-quyMrVt6svPS7CjQ9gKb3GLEX/rl3BCL2oa/QkNcXv4YNVBC9olt3s+H7ukto06q7B1Qz46PbrKLO34PR6vXcA=="],
+    "prettier": ["prettier@3.5.1", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-hPpFQvHwL3Qv5AdRvBFMhnKo4tYxp0ReXiPn2bxkiohEX6mBeBwEpBSQTkD458RaaDKQMYSp4hX4UtfUTA5wDw=="],
 
     "punycode": ["punycode@2.3.1", "", {}, "sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg=="],
 

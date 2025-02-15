@@ -7,11 +7,11 @@ import type { RpcRequest, RpcResponse } from "./rpc.ts";
 export type EngineInitializer = (context: ConnectionContext) => AbstractEngine;
 
 export enum ConnectionStatus {
-	CONNECTING = 0,
-	CONNECTED = 1,
-	DISCONNECTING = 2,
-	DISCONNECTED = 3,
-	ERROR = 4,
+	CONNECTING = "CONNECTING",
+	CONNECTED = "CONNECTED",
+	DISCONNECTING = "DISCONNECTING",
+	DISCONNECTED = "DISCONNECTED",
+	ERROR = "ERROR",
 }
 
 export type EmitterEvents = {

@@ -2,10 +2,8 @@ import { type TaggedTemplate, tagString } from "../../query/template.ts";
 
 export type ReturnType = "none" | "after" | "before" | "diff";
 
-export type ReturnState = { type: ReturnType };
-
-export const buildReturn = (state: ReturnState): TaggedTemplate => {
-	switch (state.type) {
+export const buildReturn = (type: ReturnType): TaggedTemplate => {
+	switch (type) {
 		case "none":
 			return tagString("RETURN NONE");
 		case "after":

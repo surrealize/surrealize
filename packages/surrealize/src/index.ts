@@ -1,12 +1,11 @@
-export { Statements, q } from "./statements.ts";
+export { createStatements, q } from "./statements.ts";
 export { Surrealize, type SurrealizeOptions } from "./surrealize.ts";
 
 export {
-	QueryBuilder,
 	prepareQuery,
 	prepareTransaction,
 	resolveQuery,
-} from "./query/builder.ts";
+} from "./query/utils.ts";
 export {
 	Query,
 	QueryList,
@@ -31,14 +30,14 @@ export type {
 	InferQueriesOutput,
 } from "./query/types.ts";
 
-export { Repository, type RepositoryOptions } from "./repository/repository.ts";
-export type {
-	RepositoryWhere,
-	RepositoryFindOptions,
-	RepositoryFindByOptions,
-	RepositoryFindOneOptions,
-	RepositoryFindOneByOptions,
-} from "./repository/types.ts";
+// export { Repository, type RepositoryOptions } from "./repository/repository.ts";
+// export type {
+// 	RepositoryWhere,
+// 	RepositoryFindOptions,
+// 	RepositoryFindByOptions,
+// 	RepositoryFindOneOptions,
+// 	RepositoryFindOneByOptions,
+// } from "./repository/types.ts";
 
 export * from "./statement/shared/where.ts";
 

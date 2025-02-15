@@ -1,120 +1,117 @@
-import { QueryBuilder } from "../query/builder.ts";
-import { type TaggedTemplate, merge, tag } from "../query/template.ts";
-import { buildQuery } from "../query/types.ts";
-import type { DurationLike } from "../type/duration.ts";
-import type { RecordIdLike } from "../type/recordid.ts";
+import {
+	type BuilderContext,
+	createBuilder,
+	createStatement,
+} from "../query/builder/statements.ts";
+import { merge, tag, tagString } from "../query/template.ts";
+import { type DurationLike } from "../type/duration.ts";
 import { type TargetLike, resolveTarget } from "../type/target.ts";
-import { appendObject } from "../utils/object.ts";
-import {
-	type ContentLike,
-	type DataState,
-	type SetLike,
-	buildData,
-} from "./shared/data.ts";
-import {
-	type ReturnState,
-	type ReturnType,
-	buildReturn,
-} from "./shared/return.ts";
-import { Statement } from "./shared/statement.ts";
-import { type TimeoutState, buildTimeout } from "./shared/timeout.ts";
+import { type ContentLike, type SetLike, buildData } from "./shared/data.ts";
+import { type ReturnType, buildReturn } from "./shared/return.ts";
+import { buildTimeout } from "./shared/timeout.ts";
 
-export type CreateState = {
-	create?:
-		| { only: true; target: TargetLike }
-		| { only: false; targets: TargetLike[] };
-	data?: DataState;
-	return?: ReturnState;
-	timeout?: TimeoutState;
-	parallel?: true;
-};
+export const create = <TSchema>() =>
+	createStatement((query, ctx) => (targets: TargetLike | TargetLike[]) => {
+		targets = Array.isArray(targets) ? targets : [targets];
 
-export class CreateStatement<
-	const TState extends CreateState,
-	const TSchemaOutput = unknown,
-> extends Statement<TState, TSchemaOutput> {
-	create<const TTargets extends TargetLike[]>(...targets: TTargets) {
-		return new CreateStatement(
-			appendObject(this.state, { create: { only: false, targets } }),
-			this.options,
+		query = query.append(
+			merge(
+				[
+					tagString("CREATE"),
+					merge(
+						targets.map((target) => tag`${resolveTarget(target)}`),
+						", ",
+					),
+				],
+				" ",
+			),
+			"",
 		);
-	}
 
-	createOnly<const TRecordId extends RecordIdLike>(target: TRecordId) {
-		return new CreateStatement(
-			appendObject(this.state, { create: { only: true, target } }),
-			this.options,
-		);
-	}
+		return createBuilder(query, ctx as BuilderContext<TSchema>, {
+			content: content as typeof content<TSchema>,
+			set: set as typeof set<TSchema>,
+			return: _return as typeof _return<TSchema>,
+			timeout: timeout as typeof timeout<TSchema>,
+			parallel: parallel as typeof parallel<TSchema>,
+		});
+	});
 
-	content<const TContent extends ContentLike>(content: TContent) {
-		return new CreateStatement(
-			appendObject(this.state, { data: { type: "content", content } }),
-			this.options,
-		);
-	}
+export const createOnly = <TSchema>() =>
+	createStatement(
+		(query, ctx) => (target: TargetLike) =>
+			createBuilder(
+				query.append(tag`CREATE ONLY ${resolveTarget(target)}`, ""),
+				ctx as BuilderContext<TSchema>,
+				{
+					content: content as typeof content<TSchema>,
+					set: set as typeof set<TSchema>,
+					return: _return as typeof _return<TSchema>,
+					timeout: timeout as typeof timeout<TSchema>,
+					parallel: parallel as typeof parallel<TSchema>,
+				},
+			),
+	);
 
-	set<const TSet extends SetLike>(set: TSet) {
-		return new CreateStatement(
-			appendObject(this.state, { data: { type: "set", set } }),
-			this.options,
-		);
-	}
+const content = <TSchema>() =>
+	createStatement(
+		(query, ctx) => (content: ContentLike<TSchema>) =>
+			createBuilder(
+				query.append(buildData({ type: "content", content })),
+				ctx as BuilderContext<TSchema>,
+				{
+					return: _return as typeof _return<TSchema>,
+					timeout: timeout as typeof timeout<TSchema>,
+					parallel: parallel as typeof parallel<TSchema>,
+				},
+			),
+	);
 
-	return<const TReturn extends ReturnType>(type: TReturn) {
-		return new CreateStatement(
-			appendObject(this.state, { return: { type } }),
-			this.options,
-		);
-	}
+const set = <TSchema>() =>
+	createStatement(
+		(query, ctx) => (set: SetLike<TSchema>) =>
+			createBuilder(
+				query.append(buildData({ type: "set", set })),
+				ctx as BuilderContext<TSchema>,
+				{
+					return: _return as typeof _return<TSchema>,
+					timeout: timeout as typeof timeout<TSchema>,
+					parallel: parallel as typeof parallel<TSchema>,
+				},
+			),
+	);
 
-	timeout<const TTimeout extends DurationLike>(timeout: TTimeout) {
-		return new CreateStatement(
-			appendObject(this.state, { timeout: { timeout } }),
-			this.options,
-		);
-	}
+const _return = <TSchema>() =>
+	createStatement(
+		(query, ctx) => (type: ReturnType) =>
+			createBuilder(
+				query.append(buildReturn(type)),
+				ctx as BuilderContext<TSchema>,
+				{
+					timeout: timeout as typeof timeout<TSchema>,
+					parallel: parallel as typeof parallel<TSchema>,
+				},
+			),
+	);
 
-	parallel() {
-		return new CreateStatement(
-			appendObject(this.state, { parallel: true }),
-			this.options,
-		);
-	}
+const timeout = <TSchema>() =>
+	createStatement(
+		(query, ctx) => (timeout: DurationLike) =>
+			createBuilder(
+				query.append(buildTimeout(timeout)),
+				ctx as BuilderContext<TSchema>,
+				{
+					parallel: parallel as typeof parallel<TSchema>,
+				},
+			),
+	);
 
-	[buildQuery](): QueryBuilder {
-		const query = new QueryBuilder(this.buildCreate());
-
-		// content / set
-		if (this.state.data) query.append(buildData(this.state.data));
-
-		// return
-		if (this.state.return) query.append(buildReturn(this.state.return));
-
-		// timeout
-		if (this.state.timeout) query.append(buildTimeout(this.state.timeout));
-
-		// parallel
-		if (this.state.parallel) query.append(tag`PARALLEL`);
-
-		return query;
-	}
-
-	private buildCreate(): TaggedTemplate {
-		const create = this.state.create;
-		if (!create) throw new Error("create is required");
-
-		if (create.only) return tag`CREATE ONLY ${resolveTarget(create.target)}`;
-
-		return merge(
-			[
-				tag`CREATE`,
-				merge(
-					create.targets.map((target) => tag`${resolveTarget(target)}`),
-					", ",
-				),
-			],
-			" ",
-		);
-	}
-}
+const parallel = <TSchema>() =>
+	createStatement(
+		(query, ctx) => () =>
+			createBuilder(
+				query.append("PARALLEL"),
+				ctx as BuilderContext<TSchema>,
+				{},
+			),
+	);

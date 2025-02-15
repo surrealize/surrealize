@@ -1,114 +1,102 @@
-import { QueryBuilder } from "../query/builder.ts";
-import { type TaggedTemplate, merge, tag } from "../query/template.ts";
-import { buildQuery } from "../query/types.ts";
-import type { DurationLike } from "../type/duration.ts";
-import type { RecordIdLike } from "../type/recordid.ts";
+import {
+	type BuilderContext,
+	createBuilder,
+	createStatement,
+} from "../query/builder/statements.ts";
+import { merge, tag, tagString } from "../query/template.ts";
+import { type DurationLike } from "../type/duration.ts";
 import { type TargetLike, resolveTarget } from "../type/target.ts";
-import { appendObject } from "../utils/object.ts";
-import {
-	type ReturnState,
-	type ReturnType,
-	buildReturn,
-} from "./shared/return.ts";
-import { Statement } from "./shared/statement.ts";
-import { type TimeoutState, buildTimeout } from "./shared/timeout.ts";
-import {
-	type WhereCondition,
-	type WhereState,
-	buildWhere,
-} from "./shared/where.ts";
+import { type ReturnType, buildReturn } from "./shared/return.ts";
+import { buildTimeout } from "./shared/timeout.ts";
+import { type WhereCondition, buildWhere } from "./shared/where.ts";
 
-export type DeleteState = {
-	delete?:
-		| { only: true; target: TargetLike }
-		| { only: false; targets: TargetLike[] };
-	where?: WhereState;
-	return?: ReturnState;
-	timeout?: TimeoutState;
-	parallel?: true;
-};
+export const delete_ = <TSchema>() =>
+	createStatement((query, ctx) => (targets: TargetLike | TargetLike[]) => {
+		targets = Array.isArray(targets) ? targets : [targets];
 
-export class DeleteStatement<
-	const TState extends DeleteState,
-	const TSchemaOutput = unknown,
-> extends Statement<TState, TSchemaOutput> {
-	delete<const TTargets extends TargetLike[]>(...targets: TTargets) {
-		return new DeleteStatement(
-			appendObject(this.state, { delete: { only: false, targets } }),
-			this.options,
+		query = query.append(
+			merge(
+				[
+					tagString("DELETE"),
+					merge(
+						targets.map((target) => tag`${resolveTarget(target)}`),
+						", ",
+					),
+				],
+				" ",
+			),
+			"",
 		);
-	}
 
-	deleteOnly<const TRecordId extends RecordIdLike>(target: TRecordId) {
-		return new DeleteStatement(
-			appendObject(this.state, { delete: { only: true, target } }),
-			this.options,
-		);
-	}
+		return createBuilder(query, ctx as BuilderContext<TSchema>, {
+			where: where as typeof where<TSchema>,
+			return: _return as typeof _return<TSchema>,
+			timeout: timeout as typeof timeout<TSchema>,
+			parallel: parallel as typeof parallel<TSchema>,
+		});
+	});
 
-	where<const TConditions extends WhereCondition<TSchemaOutput>[]>(
-		...conditions: TConditions
-	) {
-		return new DeleteStatement(
-			appendObject(this.state, { where: { conditions } }),
-			this.options,
-		);
-	}
+export const deleteOnly = <TSchema>() =>
+	createStatement(
+		(query, ctx) => (target: TargetLike) =>
+			createBuilder(
+				query.append(tag`DELETE ONLY ${resolveTarget(target)}`, ""),
+				ctx as BuilderContext<TSchema>,
+				{
+					where: where as typeof where<TSchema>,
+					return: _return as typeof _return<TSchema>,
+					timeout: timeout as typeof timeout<TSchema>,
+					parallel: parallel as typeof parallel<TSchema>,
+				},
+			),
+	);
 
-	return<const TReturn extends ReturnType>(type: TReturn) {
-		return new DeleteStatement(
-			appendObject(this.state, { return: { type } }),
-			this.options,
-		);
-	}
-
-	timeout<const TTimeout extends DurationLike>(timeout: TTimeout) {
-		return new DeleteStatement(
-			appendObject(this.state, { timeout: { timeout } }),
-			this.options,
-		);
-	}
-
-	parallel() {
-		return new DeleteStatement(
-			appendObject(this.state, { parallel: true }),
-			this.options,
-		);
-	}
-
-	[buildQuery](): QueryBuilder {
-		const query = new QueryBuilder(this.buildUpdate());
-
-		// where
-		if (this.state.where) query.append(buildWhere(this.state.where.conditions));
-
-		// return
-		if (this.state.return) query.append(buildReturn(this.state.return));
-
-		// timeout
-		if (this.state.timeout) query.append(buildTimeout(this.state.timeout));
-
-		// parallel
-		if (this.state.parallel) query.append(tag`PARALLEL`);
-
-		return query;
-	}
-
-	private buildUpdate(): TaggedTemplate {
-		const delete_ = this.state.delete;
-		if (!delete_) throw new Error("update is required");
-
-		if (delete_.only) return tag`DELETE ONLY ${resolveTarget(delete_.target)}`;
-
-		return merge(
-			[
-				tag`DELETE`,
-				merge(
-					delete_.targets.map((target) => tag`${resolveTarget(target)}`),
-					", ",
+const where = <TSchema>() =>
+	createStatement(
+		(query, ctx) =>
+			(...conditions: WhereCondition<TSchema>[]) =>
+				createBuilder(
+					query.append(buildWhere(conditions)),
+					ctx as BuilderContext<TSchema>,
+					{
+						return: _return as typeof _return<TSchema>,
+						timeout: timeout as typeof timeout<TSchema>,
+						parallel: parallel as typeof parallel<TSchema>,
+					},
 				),
-			],
-			" ",
-		);
-	}
-}
+	);
+
+const _return = <TSchema>() =>
+	createStatement(
+		(query, ctx) => (type: ReturnType) =>
+			createBuilder(
+				query.append(buildReturn(type)),
+				ctx as BuilderContext<TSchema>,
+				{
+					timeout: timeout as typeof timeout<TSchema>,
+					parallel: parallel as typeof parallel<TSchema>,
+				},
+			),
+	);
+
+const timeout = <TSchema>() =>
+	createStatement(
+		(query, ctx) => (timeout: DurationLike) =>
+			createBuilder(
+				query.append(buildTimeout(timeout)),
+				ctx as BuilderContext<TSchema>,
+				{
+					parallel: parallel as typeof parallel<TSchema>,
+				},
+			),
+	);
+
+const parallel = <TSchema>() =>
+	createStatement(
+		(query, ctx) => () =>
+			createBuilder(
+				query.append("PARALLEL"),
+				ctx as BuilderContext<TSchema>,
+				{},
+			),
+	);

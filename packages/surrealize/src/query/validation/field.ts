@@ -1,4 +1,4 @@
-export type InferFields<TSchemaOutput = unknown> = unknown extends TSchemaOutput
+export type Field<TSchemaOutput = unknown> = unknown extends TSchemaOutput
 	? // in case the schema output is unknown, we can't infer the fields so we allow any string
 		string
 	: // extract the keys of the schema output

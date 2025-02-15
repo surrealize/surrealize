@@ -4,10 +4,7 @@ import {
 	tag,
 	tagString,
 } from "../../query/template.ts";
-import {
-	type InferFields,
-	enforceField,
-} from "../../query/validation/field.ts";
+import { type Field, enforceField } from "../../query/validation/field.ts";
 
 export type WhereState = {
 	conditions: WhereCondition[];
@@ -25,7 +22,7 @@ export type CompareOperator =
 	| ">=" /* greater than or equal */;
 
 export type WhereCondition<TSchema = unknown> =
-	| WhereCompare<InferFields<TSchema>>
+	| WhereCompare<Field<TSchema>>
 	| WhereAnd<TSchema>
 	| WhereOr<TSchema>;
 
