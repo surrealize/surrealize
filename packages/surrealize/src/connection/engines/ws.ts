@@ -1,5 +1,6 @@
 import type { ConnectionContext } from "../connection.ts";
 import { AbstractEngine, ConnectionStatus } from "../engine.ts";
+import { DatabaseError } from "../error.ts";
 import type { RpcRequest, RpcResponse, WithId } from "../rpc.ts";
 import { getIncrementalNumber } from "../utils/incremental_number.ts";
 import { ManagedWebSocket } from "../utils/websocket.ts";
@@ -18,7 +19,10 @@ export class WebSocketEngine extends AbstractEngine {
 	constructor(context: ConnectionContext) {
 		super();
 		this.#context = context;
-		this.#socket = new ManagedWebSocket(this.#getUrl(), { protocols: "cbor" });
+		this.#socket = new ManagedWebSocket(this.#getUrl(), {
+			protocols: "cbor",
+			timeout: this.#context.timeout,
+		});
 
 		this.#registerSocketListeners();
 	}
@@ -31,8 +35,53 @@ export class WebSocketEngine extends AbstractEngine {
 		return this.#socket.ready;
 	}
 
-	connect(): Promise<void> {
-		return this.#socket.connect();
+	async connect(): Promise<void> {
+		await this.#socket.connect();
+
+		// if namespace or database is set, use it
+		if (this.#context.namespace || this.#context.database) {
+			const response = await this.rpc({
+				method: "use",
+				params: [this.#context.namespace, this.#context.database],
+			});
+
+			if (response.error) throw new DatabaseError(response.error);
+		}
+
+		// if auth is set, authenticate
+		if (this.#context.auth) {
+			let payload:
+				| { NS?: string; DB?: string; user?: string; pass?: string }
+				| undefined = undefined;
+
+			const auth = this.#context.auth;
+
+			switch (auth.type) {
+				case "root":
+					payload = { user: auth.username, pass: auth.password };
+					break;
+				case "database":
+					payload = {
+						NS: auth.namespace,
+						DB: auth.database,
+						user: auth.username,
+						pass: auth.password,
+					};
+					break;
+				case "namespace":
+					payload = {
+						NS: auth.namespace,
+						user: auth.username,
+						pass: auth.password,
+					};
+					break;
+			}
+
+			if (!payload) throw new Error("Invalid auth type");
+
+			const response = await this.rpc({ method: "signin", params: [payload] });
+			if (response.error) throw new DatabaseError(response.error);
+		}
 	}
 
 	disconnect(): Promise<void> {
@@ -69,7 +118,7 @@ export class WebSocketEngine extends AbstractEngine {
 
 		switch (request.method) {
 			case "use": {
-				const [namespace, database] = response.result as [
+				const [namespace, database] = request.params as [
 					string | null | undefined,
 					string | null | undefined,
 				];

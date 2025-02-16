@@ -18,7 +18,7 @@ const _delete = createStatement(
 		(targets: TargetLike | TargetLike[]) => {
 			targets = Array.isArray(targets) ? targets : [targets];
 
-			query = query.append(
+			const newQuery = query.append(
 				merge(
 					[
 						tagString("DELETE"),
@@ -32,7 +32,7 @@ const _delete = createStatement(
 				"",
 			);
 
-			return createBuilder(query, ctx, {
+			return createBuilder(newQuery, ctx, {
 				where: where as typeof where<TSchema>,
 				return: _return as typeof _return<TSchema>,
 				timeout: timeout as typeof timeout<TSchema>,
@@ -44,8 +44,8 @@ const _delete = createStatement(
 
 const deleteOnly = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(target: TargetLike) =>
-			createBuilder(
+		(target: TargetLike) => {
+			return createBuilder(
 				query.append(tag`DELETE ONLY ${resolveTarget(target)}`, ""),
 				ctx as BuilderContext<TSchema>,
 				{
@@ -55,7 +55,8 @@ const deleteOnly = createStatement(
 					parallel: parallel as typeof parallel<TSchema>,
 					...(withBuilderContext as WithBuilderContext<TSchema>),
 				},
-			),
+			);
+		},
 );
 
 const where = createStatement(

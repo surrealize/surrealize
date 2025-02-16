@@ -25,7 +25,8 @@ const upsert = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(targets: TargetLike | TargetLike[]) => {
 			targets = Array.isArray(targets) ? targets : [targets];
-			query = query.append(
+
+			const newQuery = query.append(
 				merge(
 					[
 						tagString("UPSERT"),
@@ -38,7 +39,7 @@ const upsert = createStatement(
 				),
 				"",
 			);
-			return createBuilder(query, ctx, {
+			return createBuilder(newQuery, ctx, {
 				content: content as typeof content<TSchema>,
 				merge: _merge as typeof _merge<TSchema>,
 				patch: patch as typeof patch<TSchema>,
@@ -56,7 +57,7 @@ const upsertOnly = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(target: TargetLike) =>
 			createBuilder(
-				query.append(tag`UPSERT ${resolveTarget(target)}`, ""),
+				query.append(tag`UPSERT ONLY ${resolveTarget(target)}`, ""),
 				ctx,
 				{
 					content: content as typeof content<TSchema>,

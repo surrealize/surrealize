@@ -14,7 +14,7 @@ describe("select", () => {
 	test("select ... from ... fetch ...", () => {
 		// statement with fetch fields
 		expect(
-			q.select().from("user").fetch("id", "name").toQuery().template,
+			q.select().from("user").fetch(["id", "name"]).toQuery().template,
 		).toEqual([["SELECT * FROM ", " FETCH id, name"], [expect.any(Table)]]);
 
 		// statement with fetch but without fields
@@ -25,7 +25,7 @@ describe("select", () => {
 
 		// statement with fetch but invalid fields
 		expect(() =>
-			q.select().from("user").fetch("id", "name", "invalid.").toQuery(),
+			q.select().from("user").fetch(["id", "name", "invalid."]).toQuery(),
 		).toThrow();
 	});
 });

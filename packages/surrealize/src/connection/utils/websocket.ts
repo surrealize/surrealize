@@ -5,6 +5,7 @@ import { parseUint8Array } from "./incremental_number.ts";
 export type WebSocketOptions = {
 	protocols?: string | string[];
 
+	timeout?: number;
 	reconnectTimeout?: number;
 };
 
@@ -59,10 +60,23 @@ export class ManagedWebSocket extends EventEmitter<WebSocketEvents> {
 		return new Promise((resolve, reject) => {
 			if (this.#closed) return reject(new Error("Socket is closed"));
 
-			const unsub = this.once("connected", () => resolve());
+			const unsub = this.once("connected", () => {
+				clearTimeout(timeout);
+				resolve();
+			});
+
+			// TODO better timeout handling ( -> global)
+			// maybe move ready to a global promise?
+			const timeout = this.#options.timeout
+				? setTimeout(() => {
+						unsub();
+						reject(new Error("Connection timeout"));
+					}, this.#options.timeout)
+				: undefined;
 
 			if (this.status === ConnectionStatus.CONNECTED) {
 				unsub();
+				clearTimeout(timeout);
 				resolve();
 			}
 		});

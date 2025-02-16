@@ -1,16 +1,6 @@
 import type { RawQuery } from "./builder/raw.ts";
 import type { Query } from "./query.ts";
 
-/**
- * @deprecated Use "~query" instead.
- */
-export const toQuery = Symbol("toQuery");
-
-/**
- * @deprecated Not needed anymore.
- */
-export const buildQuery = Symbol("buildQuery");
-
 export type PreparedQuery = {
 	query: string;
 	bindings?: Record<string, unknown>;
@@ -22,8 +12,8 @@ export type PreparedQuery = {
  * This function returns a {@link Query} or a {@link RawQuery}.
  */
 export type Queryable<TSchemaOutput = unknown> = Record<
-	"~ctx",
-	{ toQuery: () => Query<TSchemaOutput> | RawQuery }
+	"toQuery",
+	() => Query<TSchemaOutput> | RawQuery
 >;
 
 /**

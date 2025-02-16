@@ -1,24 +1,34 @@
-import { surrealdbWasmEngines } from "@surrealdb/wasm";
-import { beforeEach, describe, expect, test } from "bun:test";
-import Surreal from "surrealdb";
+import { beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { Surrealize, surql } from "surrealize";
 
 import { testSelectOnly, testSelectWhere } from "./jobs/select.ts";
 import { testVersion } from "./jobs/version.ts";
 
 const surrealize: Surrealize = new Surrealize({
-	surreal: new Surreal({ engines: surrealdbWasmEngines() }),
+	url: new URL("ws://localhost:8000"),
+
+	namespace: "test",
+	database: "test",
+
+	timeout: 5000,
+});
+
+beforeAll(async () => {
+	await surrealize.connect();
 });
 
 beforeEach(async () => {
-	await surrealize.connection.connect("mem:");
-	await surrealize.connection.use({ namespace: "test", database: "test" });
+	await surrealize.execute(surql`REMOVE DATABASE test`);
+	await surrealize.execute(surql`DEFINE DATABASE test`);
+	await surrealize.execute(surql`USE DATABASE test`);
 });
 
 describe("Integration", () => {
 	test("connection", async () => {
 		const random = Math.floor(Math.random() * 100);
 		const result = await surrealize.execute(surql`RETURN ${random}`);
+
+		console.log("re", result);
 
 		expect(result).toEqual(random);
 	});

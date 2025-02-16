@@ -273,7 +273,7 @@ export class Repository<
 
 	deleteById(id: RecordIdLike<TTable>): Query<undefined> {
 		return (
-			q
+			this.q
 				.delete(id)
 				.toQuery()
 				// skip schema validation and always return undefined

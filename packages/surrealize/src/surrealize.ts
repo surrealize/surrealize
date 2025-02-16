@@ -1,5 +1,10 @@
 import { Connection } from "./connection/connection.ts";
-import type { EngineInitializer } from "./connection/engine.ts";
+import {
+	ConnectionStatus,
+	type EngineInitializer,
+} from "./connection/engine.ts";
+import { DatabaseError } from "./connection/error.ts";
+import type { Auth } from "./connection/types.ts";
 import { surql } from "./query/query.ts";
 import type {
 	InferQueriesOutput,
@@ -19,6 +24,10 @@ import { type TargetLike, resolveTarget } from "./type/target.ts";
 export type SurrealizeOptions = {
 	url: URL | string;
 
+	namespace?: string;
+	database?: string;
+	auth?: Auth;
+
 	/**
 	 * Set the connection as the default connection.
 	 *
@@ -34,6 +43,11 @@ export type SurrealizeOptions = {
 	 * - `wss`: WebSocket Secure
 	 */
 	engines?: Record<string, EngineInitializer>;
+
+	/**
+	 * The timeout in milliseconds for the connection.
+	 */
+	timeout?: number;
 };
 
 export class Surrealize {
@@ -46,11 +60,25 @@ export class Surrealize {
 
 	constructor(options: SurrealizeOptions) {
 		this.connection = new Connection(
-			{ url: options.url instanceof URL ? options.url : new URL(options.url) },
+			{
+				url: options.url instanceof URL ? options.url : new URL(options.url),
+				namespace: options.namespace,
+				database: options.database,
+				auth: options.auth,
+				timeout: options.timeout,
+			},
 			{ engines: options.engines },
 		);
 
 		if (options.default) Surrealize.default = this;
+	}
+
+	async connect(): Promise<void> {
+		return this.connection.connect();
+	}
+
+	async disconnect(): Promise<void> {
+		return this.connection.disconnect();
 	}
 
 	async execute<TSchemaOutput>(

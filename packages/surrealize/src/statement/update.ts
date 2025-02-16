@@ -25,7 +25,8 @@ const update = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(targets: TargetLike | TargetLike[]) => {
 			targets = Array.isArray(targets) ? targets : [targets];
-			query = query.append(
+
+			const newQuery = query.append(
 				merge(
 					[
 						tagString("UPDATE"),
@@ -38,7 +39,7 @@ const update = createStatement(
 				),
 				"",
 			);
-			return createBuilder(query, ctx, {
+			return createBuilder(newQuery, ctx, {
 				content: content as typeof content<TSchema>,
 				merge: _merge as typeof _merge<TSchema>,
 				patch: patch as typeof patch<TSchema>,
@@ -56,7 +57,7 @@ const updateOnly = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(target: TargetLike) =>
 			createBuilder(
-				query.append(tag`UPDATE ${resolveTarget(target)}`, ""),
+				query.append(tag`UPDATE ONLY ${resolveTarget(target)}`, ""),
 				ctx,
 				{
 					content: content as typeof content<TSchema>,

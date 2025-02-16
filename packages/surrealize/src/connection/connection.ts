@@ -8,6 +8,7 @@ import type {
 import { WebSocketEngine } from "./engines/ws.ts";
 import { DatabaseError, QueryError } from "./error.ts";
 import type { RpcRequest, RpcResponse } from "./rpc.ts";
+import type { Auth } from "./types.ts";
 
 export type ConnectionContext = {
 	url: URL;
@@ -15,15 +16,9 @@ export type ConnectionContext = {
 	namespace?: string;
 	database?: string;
 
-	auth?:
-		| { type: "root"; username: string; password: string }
-		| { type: "database"; database: string; username: string; password: string }
-		| {
-				type: "namespace";
-				namespace: string;
-				username: string;
-				password: string;
-		  };
+	auth?: Auth;
+
+	timeout?: number;
 };
 
 export type ConnectionOptions = {
@@ -37,8 +32,8 @@ export class Connection {
 
 	constructor(context: ConnectionContext, options: ConnectionOptions = {}) {
 		const engines: Record<string, EngineInitializer> = options.engines ?? {
-			ws: (credentials) => new WebSocketEngine(credentials),
-			wss: (credentials) => new WebSocketEngine(credentials),
+			ws: (ctx) => new WebSocketEngine(ctx),
+			wss: (ctx) => new WebSocketEngine(ctx),
 		};
 
 		const protocol = context.url.protocol.replace(":", "");
@@ -77,15 +72,13 @@ export class Connection {
 			params: [query, bindings],
 		});
 
-		console.log(response);
-
 		if (response.result) {
 			const error = response.result.find((query) => query.status === "ERR");
 			if (error) throw new QueryError(error.result as string);
 
 			return response.result.map((query) => query.result) as TResult;
 		} else {
-			throw new DatabaseError(response.error.code, response.error.message);
+			throw new DatabaseError(response.error);
 		}
 	}
 }

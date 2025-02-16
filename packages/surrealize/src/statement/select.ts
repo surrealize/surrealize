@@ -22,17 +22,17 @@ import { type WhereCondition, buildWhere } from "./shared/where.ts";
 const select = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(fields: Field<TSchema>[] | "*" = "*") => {
-			query = query.append("SELECT", "");
+			let newQuery = query.append("SELECT", "");
 
 			if (fields === "*") {
-				query = query.append("*");
+				newQuery = newQuery.append("*");
 			} else {
-				query = query.append(
+				newQuery = newQuery.append(
 					tagString(enforceFields(fields, "wildcard").join(", ")),
 				);
 			}
 
-			return createBuilder(query, ctx, {
+			return createBuilder(newQuery, ctx, {
 				from: from as typeof from<TSchema>,
 				fromOnly: fromOnly as typeof fromOnly<TSchema>,
 				...(withBuilderContext as WithBuilderContext<TSchema>),
@@ -43,12 +43,12 @@ const select = createStatement(
 const selectValue = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(field: Field<TSchema>) => {
-			query = query.append(
+			const newQuery = query.append(
 				tagString(`SELECT VALUE ${enforceField(field, "wildcard")}`),
 				"",
 			);
 
-			return createBuilder(query, ctx, {
+			return createBuilder(newQuery, ctx, {
 				from: from as typeof from<TSchema>,
 				fromOnly: fromOnly as typeof fromOnly<TSchema>,
 				...(withBuilderContext as WithBuilderContext<TSchema>),
@@ -61,7 +61,7 @@ const from = createStatement(
 		(targets: TargetLike | TargetLike[]) => {
 			targets = Array.isArray(targets) ? targets : [targets];
 
-			query = query.append(
+			const newQuery = query.append(
 				merge(
 					[
 						tagString("FROM"),
@@ -74,7 +74,7 @@ const from = createStatement(
 				),
 			);
 
-			return createBuilder(query, ctx, {
+			return createBuilder(newQuery, ctx, {
 				with: _with as typeof _with<TSchema>,
 				where: where as typeof where<TSchema>,
 				split: split as typeof split<TSchema>,
@@ -120,7 +120,7 @@ const fromOnly = createStatement(
 const _with = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(...indexes: string[]) => {
-			query =
+			const newQuery =
 				indexes.length === 0
 					? query.append(tagString("WITH NOINDEX"))
 					: query.append(
@@ -136,7 +136,7 @@ const _with = createStatement(
 							),
 						);
 
-			return createBuilder(query, ctx, {
+			return createBuilder(newQuery, ctx, {
 				where: where as typeof where<TSchema>,
 				split: split as typeof split<TSchema>,
 				group: group as typeof group<TSchema>,
@@ -278,26 +278,29 @@ const start = createStatement(
 
 const fetch = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(fields: Field<TSchema>[]) => {
-			return createBuilder(
-				query.append(
-					merge(
-						[
-							tagString("FETCH"),
-							merge(enforceFields(fields).map(tagString), ", "),
-						],
-						" ",
-					),
-				),
-				ctx,
-				{
-					timeout: timeout as typeof timeout<TSchema>,
-					parallel: parallel as typeof parallel<TSchema>,
-					tempfiles: tempfiles as typeof tempfiles<TSchema>,
-					explain: explain as typeof explain<TSchema>,
-					...(withBuilderContext as WithBuilderContext<TSchema>),
-				},
-			);
+		(fields: Field<TSchema>[] = []) => {
+			const newQuery =
+				fields.length === 0
+					? // do nothing if no fields are provided
+						query
+					: // otherwise append the fields
+						query.append(
+							merge(
+								[
+									tagString("FETCH"),
+									merge(enforceFields(fields).map(tagString), ", "),
+								],
+								" ",
+							),
+						);
+
+			return createBuilder(newQuery, ctx, {
+				timeout: timeout as typeof timeout<TSchema>,
+				parallel: parallel as typeof parallel<TSchema>,
+				tempfiles: tempfiles as typeof tempfiles<TSchema>,
+				explain: explain as typeof explain<TSchema>,
+				...(withBuilderContext as WithBuilderContext<TSchema>),
+			});
 		},
 );
 

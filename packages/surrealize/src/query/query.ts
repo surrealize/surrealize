@@ -1,4 +1,4 @@
-import type { Schema, SchemaWithOutput } from "../schema/types.ts";
+import type { Schema } from "../schema/types.ts";
 import { Surrealize } from "../surrealize.ts";
 import { type TaggedTemplate, tag } from "./template.ts";
 import type { InferQueriesOutput } from "./types.ts";
@@ -14,7 +14,7 @@ export type QueryOptions<TOutput = unknown> = {
 	/**
 	 * An optional schema to use for validating the result.
 	 */
-	schema?: SchemaWithOutput<TOutput>;
+	schema?: Schema<TOutput>;
 };
 
 export type QueryListOptions = {
@@ -26,22 +26,19 @@ export type QueryListOptions = {
 	connection?: Surrealize;
 };
 
-export class Query<TOutput = unknown> {
+export class Query<TSchema = unknown> {
 	readonly template: TaggedTemplate;
 	readonly connection?: Surrealize;
 
-	schema?: Schema<unknown, TOutput>;
+	schema?: Schema<TSchema>;
 
-	constructor(
-		template: TaggedTemplate,
-		options: QueryOptions<TSchemaOutput> = {},
-	) {
+	constructor(template: TaggedTemplate, options: QueryOptions<TSchema> = {}) {
 		this.template = template;
 		this.connection = options.connection;
 		this.schema = options.schema;
 	}
 
-	withConnection(connection: Surrealize): Query<TSchemaOutput> {
+	withConnection(connection: Surrealize): Query<TSchema> {
 		return new Query(this.template, {
 			connection,
 			schema: this.schema,
@@ -57,13 +54,13 @@ export class Query<TOutput = unknown> {
 		});
 	}
 
-	with<TWithSchemaOutput = unknown>(
-		options?: QueryOptions<TWithSchemaOutput>,
-	): Query<TWithSchemaOutput> {
+	with<TWithSchema = unknown>(
+		options?: QueryOptions<TWithSchema>,
+	): Query<TWithSchema> {
 		return new Query(this.template, options);
 	}
 
-	async execute(): Promise<TSchemaOutput> {
+	async execute(): Promise<TSchema> {
 		const connection = this.connection ?? Surrealize.default;
 		if (!connection) throw new Error("No connection provided");
 

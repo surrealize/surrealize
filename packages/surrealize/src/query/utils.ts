@@ -6,8 +6,8 @@ import { type PreparedQuery, type QueryLike } from "./types.ts";
 export const resolveQuery = <TOutput>(
 	query: QueryLike<TOutput>,
 ): Query<TOutput> => {
-	if ("~ctx" in query) {
-		const toQueryValue = query["~ctx"].toQuery();
+	if ("toQuery" in query) {
+		const toQueryValue = query.toQuery();
 
 		if (toQueryValue instanceof RawQuery) {
 			return toQueryValue.toQuery();

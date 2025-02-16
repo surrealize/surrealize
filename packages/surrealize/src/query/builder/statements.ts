@@ -1,9 +1,10 @@
+import type { Schema } from "../../schema/types.ts";
 import type { Surrealize } from "../../surrealize.ts";
 import { Query } from "../query.ts";
 import { RawQuery } from "./raw.ts";
 
 export type BuilderContext<TSchema> = {
-	schema?: TSchema;
+	schema?: Schema<TSchema>;
 	connection?: Surrealize;
 };
 

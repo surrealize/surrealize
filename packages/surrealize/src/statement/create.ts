@@ -18,7 +18,7 @@ const create = createStatement(
 		(targets: TargetLike | TargetLike[]) => {
 			targets = Array.isArray(targets) ? targets : [targets];
 
-			query = query.append(
+			const newQuery = query.append(
 				merge(
 					[
 						tagString("CREATE"),
@@ -32,7 +32,7 @@ const create = createStatement(
 				"",
 			);
 
-			return createBuilder(query, ctx, {
+			return createBuilder(newQuery, ctx, {
 				content: content as typeof content<TSchema>,
 				set: set as typeof set<TSchema>,
 				return: _return as typeof _return<TSchema>,

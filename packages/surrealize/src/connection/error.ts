@@ -1,7 +1,9 @@
+import type { RpcResponseError } from "./rpc.ts";
+
 export class DatabaseError extends Error {
 	code: number;
 
-	constructor(code: number, message: string) {
+	constructor({ code, message }: RpcResponseError["error"]) {
 		super(message);
 		this.code = code;
 	}
