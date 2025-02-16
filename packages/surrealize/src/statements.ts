@@ -2,7 +2,7 @@ import { RawQuery } from "./query/builder/raw.ts";
 import { type Builder, createBuilder } from "./query/builder/statements.ts";
 import type { Schema } from "./schema/types.ts";
 import { create, createOnly } from "./statement/create.ts";
-import { deleteOnly, delete_ } from "./statement/delete.ts";
+import { delete as _delete, deleteOnly } from "./statement/delete.ts";
 import { select, selectValue } from "./statement/select.ts";
 import { update, updateOnly } from "./statement/update.ts";
 import { upsert, upsertOnly } from "./statement/upsert.ts";
@@ -12,7 +12,7 @@ const statements = {
 	create,
 	createOnly,
 
-	delete: delete_,
+	delete: _delete,
 	deleteOnly,
 
 	select,
@@ -25,25 +25,22 @@ const statements = {
 	upsertOnly,
 };
 
-export type DefaultBuilder<TSchema = unknown> = Builder<
-	{
-		create: typeof create<TSchema>;
-		createOnly: typeof createOnly<TSchema>;
+export type DefaultBuilder<TSchema = unknown> = Builder<{
+	create: typeof create<TSchema>;
+	createOnly: typeof createOnly<TSchema>;
 
-		delete: typeof delete_<TSchema>;
-		deleteOnly: typeof deleteOnly<TSchema>;
+	delete: typeof _delete<TSchema>;
+	deleteOnly: typeof deleteOnly<TSchema>;
 
-		select: typeof select<TSchema>;
-		selectValue: typeof selectValue<TSchema>;
+	select: typeof select<TSchema>;
+	selectValue: typeof selectValue<TSchema>;
 
-		update: typeof update<TSchema>;
-		updateOnly: typeof updateOnly<TSchema>;
+	update: typeof update<TSchema>;
+	updateOnly: typeof updateOnly<TSchema>;
 
-		upsert: typeof upsert<TSchema>;
-		upsertOnly: typeof upsertOnly<TSchema>;
-	},
-	TSchema
->;
+	upsert: typeof upsert<TSchema>;
+	upsertOnly: typeof upsertOnly<TSchema>;
+}>;
 
 export const q: DefaultBuilder = createBuilder(new RawQuery(), {}, statements);
 

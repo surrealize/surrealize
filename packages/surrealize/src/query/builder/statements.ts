@@ -1,81 +1,79 @@
-import type { Schema } from "../../schema/types.ts";
 import type { Surrealize } from "../../surrealize.ts";
-import type { Query } from "../query.ts";
-import type { RawQuery } from "./raw.ts";
+import { Query } from "../query.ts";
+import { RawQuery } from "./raw.ts";
 
-export type StatementFn = (
-	...args: any[]
-) => AnyBuilder<never> | AnyBuilder<string>;
-
-export type BuilderContext<TSchema = unknown> = {
-	schema?: Schema<TSchema>;
+export type BuilderContext<TSchema> = {
+	schema?: TSchema;
 	connection?: Surrealize;
 };
 
-export type BuilderOptions<TSchema = unknown> = {
-	toQuery: () => Query<TSchema>;
+export type Statement<
+	TFn extends (...args: any[]) => any = (...args: any[]) => any,
+> = (query: RawQuery, ctx: BuilderContext<any>) => TFn;
 
-	["~query"]: {
-		raw: RawQuery;
-		toQuery: () => Query<TSchema>;
+export type Builder<
+	TStatements extends Record<string, Statement> = Record<string, Statement>,
+> = {
+	[Key in keyof TStatements]: TStatements[Key] extends Statement<infer TFn>
+		? TFn
+		: never;
+};
+
+export const createStatement = <
+	TStatement extends Statement<TFn>,
+	TFn extends (...args: any[]) => any,
+>(
+	statement: TStatement,
+): TStatement => statement;
+
+export const createBuilder = <TStatements extends Record<string, Statement>>(
+	query: RawQuery,
+	ctx: BuilderContext<unknown>,
+	statements: TStatements,
+): Builder<TStatements> => {
+	const builder = Object.fromEntries(
+		Object.entries(statements).map(([key, statement]) => [
+			key,
+			statement(query, ctx),
+		]),
+	);
+
+	return builder as Builder<TStatements>;
+};
+
+export type WithBuilderContext<TSchema> = {
+	toQuery: (
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) => () => Query<TSchema>;
+
+	"~builder": (
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) => () => {
+		query: RawQuery;
 		ctx: BuilderContext<TSchema>;
 	};
 };
 
-export type Statement<TFn extends StatementFn = StatementFn> = (
-	raw: RawQuery,
-	ctx: BuilderContext<unknown>,
-) => TFn;
+export const withBuilderContext: WithBuilderContext<unknown> = {
+	toQuery: (query, ctx) => () =>
+		query.toQuery({ schema: ctx.schema, connection: ctx.connection }),
+	"~builder": (query, ctx) => () => ({ query, ctx }),
+};
 
-export type LazyStatement<TFn extends StatementFn = StatementFn> =
-	() => Statement<TFn>;
-
-export type Builder<
-	TStatements extends Record<string, LazyStatement>,
-	TSchema,
-> = {
-	[Key in keyof TStatements]: TStatements[Key] extends () => Statement<
-		infer TFn
-	>
-		? TFn
-		: never;
-} & BuilderOptions<TSchema>;
-
-export type AnyBuilder<T extends string> = Builder<
-	{ [key in T]: LazyStatement },
-	unknown
->;
-
-export const createStatement = <const TFn extends StatementFn>(
-	statement: Statement<TFn>,
-): Statement<TFn> => statement;
-
-export const createBuilder = <
-	const TStatements extends Record<string, LazyStatement>,
-	TSchema,
+export const useStatement = <
+	TStatement extends Statement<
+		(...args: any[]) => Builder<WithBuilderContext<unknown>>
+	>,
 >(
-	raw: RawQuery,
-	ctx: BuilderContext<TSchema>,
-	statements: TStatements,
-): Builder<TStatements, TSchema> => {
-	const builder = Object.fromEntries(
-		Object.entries(statements ?? {}).map<[string, StatementFn]>(
-			([key, statement]) => [key, statement()(raw, ctx)],
-		),
-	);
-
-	const toQueryFn = () =>
-		raw.toQuery({ schema: ctx.schema, connection: ctx.connection });
+	statement: TStatement,
+	query: RawQuery = new RawQuery(),
+	ctx: BuilderContext<unknown> = {},
+): { apply: (...args: Parameters<ReturnType<TStatement>>) => RawQuery } => {
+	const fn = statement(query, ctx);
 
 	return {
-		...builder,
-
-		toQuery: toQueryFn,
-
-		"~query": {
-			toQuery: toQueryFn,
-			raw,
-			ctx,
-		},
-	} as Builder<TStatements, TSchema>;
+		apply: (...args) => fn(...args)["~builder"]().query,
+	};
 };

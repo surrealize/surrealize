@@ -1,3 +1,5 @@
+import { RawQuery } from "../query/builder/raw.ts";
+import { useStatement } from "../query/builder/statements.ts";
 import { type Query, QueryList } from "../query/query.ts";
 import {
 	alwaysTo,
@@ -5,6 +7,7 @@ import {
 	convertSchemaUndefinable,
 } from "../schema/common.ts";
 import type { Schema } from "../schema/types.ts";
+import * as selectStatements from "../statement/select.ts";
 import type { ContentLike, SetLike } from "../statement/shared/data.ts";
 import type { WhereCondition } from "../statement/shared/where.ts";
 import { type DefaultBuilder, createDefaultBuilder, q } from "../statements.ts";
@@ -300,41 +303,53 @@ export class Repository<
 	private query<TQuerySchemaOutput = unknown>(
 		options: RepositoryRawQueryOptions<TQuerySchemaOutput>,
 	): Query<TQuerySchemaOutput> {
-		// build the query
-		let query = options.one
-			? // if only one record should be returned, use `fromOnly` and limit to 1
-				q.select().fromOnly(options.target ?? this.table)
-			: // else use normal `from`
-				q.select().from(options.target ?? this.table);
+		let query = new RawQuery();
 
-		type Builder = typeof query;
-		// Ensure statements are called in the right order
+		if (options.one) {
+			query = useStatement(selectStatements.select, query).apply();
+			query = useStatement(selectStatements.fromOnly, query).apply(
+				options.target ?? this.table,
+			);
+		} else {
+			query = useStatement(selectStatements.select, query).apply();
+			query = useStatement(selectStatements.from, query).apply(
+				options.target ?? this.table,
+			);
+		}
 
 		// apply where conditions
 		if (options.where) {
-			query = query.where(...this.getWhereConditions(options.where)) as Builder;
+			query = useStatement(selectStatements.where, query).apply(
+				...this.getWhereConditions(options.where),
+			);
 		}
 
 		// apply limit
 		if (options.one) {
 			// limit to 1 if only one record should be returned
-			query = query.limit(1) as Builder;
+			query = useStatement(selectStatements.limit, query).apply(1);
 		} else if (options.limit) {
 			// otherwise limit to the specified limit, if provided
-			query = query.limit(options.limit) as Builder;
+			query = useStatement(selectStatements.limit, query).apply(options.limit);
 		}
 
 		// apply start
-		if (options.start) query = query.start(options.start) as Builder;
+		if (options.start)
+			query = useStatement(selectStatements.start, query).apply(options.start);
 
 		// apply timeout
-		if (options.timeout) query = query.timeout(options.timeout) as Builder;
+		if (options.timeout)
+			query = useStatement(selectStatements.timeout, query).apply(
+				options.timeout,
+			);
 
 		// apply parallel
-		if (options.parallel) query = query.parallel() as Builder;
+		if (options.parallel)
+			query = useStatement(selectStatements.parallel, query).apply();
 
 		// apply tempfiles
-		if (options.tempfiles) query = query.tempfiles() as Builder;
+		if (options.tempfiles)
+			query = useStatement(selectStatements.tempfiles, query).apply();
 
 		return query.toQuery().with({
 			// converts the schema to an array schema because we expect an array of results
