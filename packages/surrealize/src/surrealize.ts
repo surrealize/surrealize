@@ -1,9 +1,12 @@
-import { Connection } from "./connection/connection.ts";
+import type { EventEmitter } from "./connection/emitter.ts";
 import {
-	ConnectionStatus,
+	AbstractEngine,
+	type EmitterEvents,
 	type EngineInitializer,
 } from "./connection/engine.ts";
-import { DatabaseError } from "./connection/error.ts";
+import { WebSocketEngine } from "./connection/engines/ws.ts";
+import { DatabaseError, QueryError } from "./connection/error.ts";
+import type { RpcRequest, RpcResponse } from "./connection/rpc.ts";
 import type { Auth } from "./connection/types.ts";
 import { surql } from "./query/query.ts";
 import type {
@@ -53,32 +56,43 @@ export type SurrealizeOptions = {
 export class Surrealize {
 	static default: Surrealize | undefined = undefined;
 
-	/**
-	 * The underlying SurrealDB connection to execute queries.
-	 */
-	connection: Connection;
+	readonly #engine: AbstractEngine;
+	readonly emitter: EventEmitter<EmitterEvents>;
 
 	constructor(options: SurrealizeOptions) {
-		this.connection = new Connection(
-			{
-				url: options.url instanceof URL ? options.url : new URL(options.url),
-				namespace: options.namespace,
-				database: options.database,
-				auth: options.auth,
-				timeout: options.timeout,
-			},
-			{ engines: options.engines },
-		);
+		const engines: Record<string, EngineInitializer> = options.engines ?? {
+			ws: (ctx) => new WebSocketEngine(ctx),
+			wss: (ctx) => new WebSocketEngine(ctx),
+		};
+		const url = options.url instanceof URL ? options.url : new URL(options.url);
+
+		const protocol = url.protocol.replace(":", "");
+		const engine = engines[protocol];
+
+		if (!engine) throw new Error(`Unsupported protocol ${protocol}`);
+
+		this.#engine = engine({
+			url,
+			namespace: options.namespace,
+			database: options.database,
+			auth: options.auth,
+			timeout: options.timeout,
+		});
+		this.emitter = this.#engine.emitter;
 
 		if (options.default) Surrealize.default = this;
 	}
 
 	async connect(): Promise<void> {
-		return this.connection.connect();
+		return this.#engine.connect();
 	}
 
 	async disconnect(): Promise<void> {
-		return this.connection.disconnect();
+		return this.#engine.disconnect();
+	}
+
+	async version(): Promise<string> {
+		return this.#engine.version();
 	}
 
 	async execute<TSchemaOutput>(
@@ -87,7 +101,7 @@ export class Surrealize {
 		const { template, schema } = resolveQuery(queryLike);
 		const { query, bindings } = prepareQuery(template);
 
-		const [result] = await this.connection.query(query, bindings);
+		const [result] = await this.query(query, bindings);
 
 		return (schema ? parseSchema(schema, result) : result) as TSchemaOutput;
 	}
@@ -109,7 +123,7 @@ export class Surrealize {
 
 		const { query, bindings } = prepareTransaction(queries);
 
-		const results = await this.connection.query(query, bindings);
+		const results = await this.query(query, bindings);
 
 		return queries.map(({ schema }, index) => {
 			const queryResult = results[index];
@@ -137,5 +151,30 @@ export class Surrealize {
 				: surql`SELECT * FROM ${target}`;
 
 		return this.execute(query.withSchema(schema));
+	}
+
+	async rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>> {
+		return this.#engine.rpc(request);
+	}
+
+	async query<TResult extends unknown[]>(
+		query: string,
+		bindings?: Record<string, unknown>,
+	): Promise<TResult> {
+		const response = await this.rpc<
+			Array<{ result: unknown; status: "OK" | "ERR"; time: string }>
+		>({
+			method: "query",
+			params: [query, bindings],
+		});
+
+		if (response.result) {
+			const error = response.result.find((query) => query.status === "ERR");
+			if (error) throw new QueryError(error.result as string);
+
+			return response.result.map((query) => query.result) as TResult;
+		} else {
+			throw new DatabaseError(response.error);
+		}
 	}
 }

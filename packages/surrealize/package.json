@@ -8,10 +8,9 @@
 	},
 	"dependencies": {},
 	"devDependencies": {
-		"@surrealdb/wasm": "^1.1.0",
-		"@types/bun": "^1.1.14",
-		"tsup": "^8.3.5",
-		"typescript": "^5.7.2"
+		"@types/bun": "^1.2.2",
+		"tsup": "^8.3.6",
+		"typescript": "^5.7.3"
 	},
 	"exports": {
 		".": "./src/index.ts"

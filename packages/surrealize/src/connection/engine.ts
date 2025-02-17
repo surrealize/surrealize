@@ -1,10 +1,21 @@
 import { decodeCbor, encodeCbor } from "./cbor/cbor.ts";
 import type { CborDecoder, CborEncoder } from "./cbor/types.ts";
-import type { ConnectionContext } from "./connection.ts";
 import { EventEmitter } from "./emitter.ts";
 import type { RpcRequest, RpcResponse } from "./rpc.ts";
+import type { Auth } from "./types.ts";
 
-export type EngineInitializer = (context: ConnectionContext) => AbstractEngine;
+export type EngineContext = {
+	url: URL;
+
+	namespace?: string;
+	database?: string;
+
+	auth?: Auth;
+
+	timeout?: number;
+};
+
+export type EngineInitializer = (context: EngineContext) => AbstractEngine;
 
 export enum ConnectionStatus {
 	CONNECTING = "CONNECTING",

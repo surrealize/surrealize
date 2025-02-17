@@ -18,17 +18,13 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-	await surrealize.execute(surql`REMOVE DATABASE test`);
-	await surrealize.execute(surql`DEFINE DATABASE test`);
-	await surrealize.execute(surql`USE DATABASE test`);
+	await surrealize.execute(surql`REMOVE DATABASE IF EXISTS test`);
 });
 
 describe("Integration", () => {
 	test("connection", async () => {
 		const random = Math.floor(Math.random() * 100);
 		const result = await surrealize.execute(surql`RETURN ${random}`);
-
-		console.log("re", result);
 
 		expect(result).toEqual(random);
 	});

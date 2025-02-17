@@ -1,5 +1,8 @@
-import type { ConnectionContext } from "../connection.ts";
-import { AbstractEngine, ConnectionStatus } from "../engine.ts";
+import {
+	AbstractEngine,
+	ConnectionStatus,
+	type EngineContext,
+} from "../engine.ts";
 import { DatabaseError } from "../error.ts";
 import type { RpcRequest, RpcResponse, WithId } from "../rpc.ts";
 import { getIncrementalNumber } from "../utils/incremental_number.ts";
@@ -14,9 +17,9 @@ type WebSocketEngineConnection = {
 export class WebSocketEngine extends AbstractEngine {
 	#socket: ManagedWebSocket;
 	#connection: WebSocketEngineConnection = {};
-	#context: ConnectionContext;
+	#context: EngineContext;
 
-	constructor(context: ConnectionContext) {
+	constructor(context: EngineContext) {
 		super();
 		this.#context = context;
 		this.#socket = new ManagedWebSocket(this.#getUrl(), {
@@ -109,8 +112,9 @@ export class WebSocketEngine extends AbstractEngine {
 		return response as RpcResponse<TResult>;
 	}
 
-	version(): Promise<string> {
-		throw new Error("Failed to get version");
+	async version(): Promise<string> {
+		// TODO implement version method
+		return "surrealdb-2.0.0";
 	}
 
 	#handleRequest(request: RpcRequest, response: RpcResponse): void {

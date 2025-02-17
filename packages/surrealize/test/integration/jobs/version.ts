@@ -4,7 +4,7 @@ import type { Surrealize } from "surrealize";
 const VERSION_REGEX = /^surrealdb-([0-9]+.[0-9]+.[0-9]+)$/;
 
 export const testVersion = async (surrealize: Surrealize) => {
-	const version = await surrealize.connection.version();
+	const version = await surrealize.version();
 
 	expect(version).toMatch(VERSION_REGEX);
 
