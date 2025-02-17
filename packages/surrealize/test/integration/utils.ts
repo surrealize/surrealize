@@ -1,5 +1,5 @@
 import { expect } from "bun:test";
-import { type Surrealize, q, surql } from "surrealize";
+import { type Surrealize, q } from "surrealize";
 
 export const insertDemoData = async (surrealize: Surrealize) => {
 	const query1 = q.create("user:bob").content({ name: "Bob", age: 10 });
