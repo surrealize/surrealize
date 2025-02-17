@@ -14,7 +14,11 @@ export type OrderFields<TSchema = any> =
 	| "rand"
 	| Array<Field<TSchema> | OrderFieldOptions<TSchema>>;
 
-export const buildOrder = (fields: OrderFields): TaggedTemplate => {
+export const buildOrder = (
+	fields?: OrderFields,
+): TaggedTemplate | undefined => {
+	if (!fields) return;
+
 	let template: TaggedTemplate = tagString("ORDER");
 
 	if (fields === "rand") return merge([template, tagString("rand()")], " ");

@@ -41,9 +41,11 @@ export type WhereOr<TSchema = unknown> = {
 	conditions: WhereCondition<TSchema>[];
 };
 
-export const buildWhere = (conditions: WhereCondition[]): TaggedTemplate => {
+export const buildWhere = (
+	conditions?: WhereCondition[],
+): TaggedTemplate | undefined => {
 	// return an empty string if there are no conditions
-	if (conditions.length === 0) return tagString("");
+	if (!conditions || conditions.length === 0) return;
 
 	return merge([tag`WHERE`, formatCondition(and(...conditions))], " ");
 };

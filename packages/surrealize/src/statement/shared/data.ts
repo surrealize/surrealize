@@ -30,7 +30,11 @@ export type MergeLike<TSchema> = Record<string, unknown>;
 // TODO types
 export type PatchLike<TSchema> = Record<string, unknown>;
 
-export const buildData = <TSchema>(data: Data<TSchema>): TaggedTemplate => {
+export const buildData = <TSchema>(
+	data?: Data<TSchema>,
+): TaggedTemplate | undefined => {
+	if (!data) return;
+
 	switch (data.type) {
 		case "content":
 			return tag`CONTENT ${data.content}`;

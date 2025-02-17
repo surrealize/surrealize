@@ -75,9 +75,11 @@ const upsertOnly = createStatement(
 
 const content = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(content: ContentLike<TSchema>) =>
+		(content?: ContentLike<TSchema>) =>
 			createBuilder(
-				query.append(buildData({ type: "content", content })),
+				query.append(
+					buildData(content ? { type: "content", content } : undefined),
+				),
 				ctx,
 				{
 					where: where as typeof where<TSchema>,
@@ -91,56 +93,72 @@ const content = createStatement(
 
 const _merge = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(merge: MergeLike<TSchema>) =>
-			createBuilder(query.append(buildData({ type: "merge", merge })), ctx, {
-				where: where as typeof where<TSchema>,
-				return: _return as typeof _return<TSchema>,
-				timeout: timeout as typeof timeout<TSchema>,
-				parallel: parallel as typeof parallel<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
-			}),
+		(merge?: MergeLike<TSchema>) =>
+			createBuilder(
+				query.append(buildData(merge ? { type: "merge", merge } : undefined)),
+				ctx,
+				{
+					where: where as typeof where<TSchema>,
+					return: _return as typeof _return<TSchema>,
+					timeout: timeout as typeof timeout<TSchema>,
+					parallel: parallel as typeof parallel<TSchema>,
+					...(withBuilderContext as WithBuilderContext<TSchema>),
+				},
+			),
 );
 
 const patch = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(patch: PatchLike<TSchema>) =>
-			createBuilder(query.append(buildData({ type: "patch", patch })), ctx, {
-				where: where as typeof where<TSchema>,
-				return: _return as typeof _return<TSchema>,
-				timeout: timeout as typeof timeout<TSchema>,
-				parallel: parallel as typeof parallel<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
-			}),
+		(patch?: PatchLike<TSchema>) =>
+			createBuilder(
+				query.append(patch ? buildData({ type: "patch", patch }) : undefined),
+				ctx,
+				{
+					where: where as typeof where<TSchema>,
+					return: _return as typeof _return<TSchema>,
+					timeout: timeout as typeof timeout<TSchema>,
+					parallel: parallel as typeof parallel<TSchema>,
+					...(withBuilderContext as WithBuilderContext<TSchema>),
+				},
+			),
 );
 
 const set = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(set: SetLike<TSchema>) =>
-			createBuilder(query.append(buildData({ type: "set", set })), ctx, {
-				unset: unset as typeof unset<TSchema>,
-				where: where as typeof where<TSchema>,
-				return: _return as typeof _return<TSchema>,
-				timeout: timeout as typeof timeout<TSchema>,
-				parallel: parallel as typeof parallel<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
-			}),
+		(set?: SetLike<TSchema>) =>
+			createBuilder(
+				query.append(buildData(set ? { type: "set", set } : undefined)),
+				ctx,
+				{
+					unset: unset as typeof unset<TSchema>,
+					where: where as typeof where<TSchema>,
+					return: _return as typeof _return<TSchema>,
+					timeout: timeout as typeof timeout<TSchema>,
+					parallel: parallel as typeof parallel<TSchema>,
+					...(withBuilderContext as WithBuilderContext<TSchema>),
+				},
+			),
 );
 
 const unset = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(unset: UnsetLike<TSchema>) =>
-			createBuilder(query.append(buildData({ type: "unset", unset })), ctx, {
-				where: where as typeof where<TSchema>,
-				return: _return as typeof _return<TSchema>,
-				timeout: timeout as typeof timeout<TSchema>,
-				parallel: parallel as typeof parallel<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
-			}),
+		(unset?: UnsetLike<TSchema>) =>
+			createBuilder(
+				query.append(unset ? buildData({ type: "unset", unset }) : undefined),
+				ctx,
+				{
+					where: where as typeof where<TSchema>,
+					return: _return as typeof _return<TSchema>,
+					timeout: timeout as typeof timeout<TSchema>,
+					parallel: parallel as typeof parallel<TSchema>,
+					...(withBuilderContext as WithBuilderContext<TSchema>),
+				},
+			),
 );
 
 const where = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(...conditions: WhereCondition<TSchema>[]) =>
+		(conditions?: WhereCondition<TSchema>[]) =>
 			createBuilder(query.append(buildWhere(conditions)), ctx, {
 				return: _return as typeof _return<TSchema>,
 				timeout: timeout as typeof timeout<TSchema>,
@@ -151,8 +169,8 @@ const where = createStatement(
 
 const _return = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(type: ReturnType) =>
-			createBuilder(query.append(buildReturn(type)), ctx, {
+		(type?: ReturnType) =>
+			createBuilder(query.append(type ? buildReturn(type) : undefined), ctx, {
 				timeout: timeout as typeof timeout<TSchema>,
 				parallel: parallel as typeof parallel<TSchema>,
 				...(withBuilderContext as WithBuilderContext<TSchema>),
@@ -161,7 +179,7 @@ const _return = createStatement(
 
 const timeout = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(timeout: DurationLike) =>
+		(timeout?: DurationLike) =>
 			createBuilder(query.append(buildTimeout(timeout)), ctx, {
 				parallel: parallel as typeof parallel<TSchema>,
 				...(withBuilderContext as WithBuilderContext<TSchema>),
@@ -170,9 +188,9 @@ const timeout = createStatement(
 
 const parallel = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		() =>
+		(append = true) =>
 			createBuilder(
-				query.append("PARALLEL"),
+				append ? query.append("PARALLEL") : query,
 				ctx,
 				withBuilderContext as WithBuilderContext<TSchema>,
 			),

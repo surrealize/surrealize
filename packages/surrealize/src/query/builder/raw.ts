@@ -12,11 +12,13 @@ export class RawQuery {
 	/**
 	 * Append a {@link TaggedTemplate} to the current template.
 	 *
-	 * @param template The {@link TaggedTemplate} to append.
+	 * @param template The {@link TaggedTemplate} or string to append.
 	 * @param join The join string to use between the queries. Defaults to a space.
 	 * @returns A new {@link RawQuery} with the appended template.
 	 */
-	append(template: TaggedTemplate | string, join = " "): RawQuery {
+	append(template?: TaggedTemplate | string, join = " "): RawQuery {
+		if (!template) return this;
+
 		template = typeof template === "string" ? tagString(template) : template;
 
 		// skip appending if the template is empty

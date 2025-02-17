@@ -1,5 +1,3 @@
-import { RawQuery } from "../query/builder/raw.ts";
-import { useStatement } from "../query/builder/statements.ts";
 import { type Query, QueryList } from "../query/query.ts";
 import {
 	alwaysTo,
@@ -7,7 +5,6 @@ import {
 	convertSchemaUndefinable,
 } from "../schema/common.ts";
 import type { Schema } from "../schema/types.ts";
-import * as selectStatements from "../statement/select.ts";
 import type { ContentLike, SetLike } from "../statement/shared/data.ts";
 import type { WhereCondition } from "../statement/shared/where.ts";
 import { type DefaultBuilder, createDefaultBuilder, q } from "../statements.ts";
@@ -208,7 +205,7 @@ export class Repository<
 		return this.q
 			.update(this.table)
 			.set(flatten(partialRecord) as SetLike<TRecord>)
-			.where(...this.getWhereConditions(where))
+			.where(this.getWhereConditions(where))
 			.toQuery();
 	}
 
@@ -263,7 +260,7 @@ export class Repository<
 		return (
 			q
 				.delete(this.table)
-				.where(...this.getWhereConditions(where))
+				.where(this.getWhereConditions(where))
 				.toQuery()
 				// skip schema validation and always return undefined
 				// because it deletes the record
@@ -303,53 +300,17 @@ export class Repository<
 	private query<TQuerySchemaOutput = unknown>(
 		options: RepositoryRawQueryOptions<TQuerySchemaOutput>,
 	): Query<TQuerySchemaOutput> {
-		let query = new RawQuery();
+		const baseQuery = options.one
+			? q.select().fromOnly(options.target ?? this.table)
+			: q.select().from(options.target ?? this.table);
 
-		if (options.one) {
-			query = useStatement(selectStatements.select, query).apply();
-			query = useStatement(selectStatements.fromOnly, query).apply(
-				options.target ?? this.table,
-			);
-		} else {
-			query = useStatement(selectStatements.select, query).apply();
-			query = useStatement(selectStatements.from, query).apply(
-				options.target ?? this.table,
-			);
-		}
-
-		// apply where conditions
-		if (options.where) {
-			query = useStatement(selectStatements.where, query).apply(
-				...this.getWhereConditions(options.where),
-			);
-		}
-
-		// apply limit
-		if (options.one) {
-			// limit to 1 if only one record should be returned
-			query = useStatement(selectStatements.limit, query).apply(1);
-		} else if (options.limit) {
-			// otherwise limit to the specified limit, if provided
-			query = useStatement(selectStatements.limit, query).apply(options.limit);
-		}
-
-		// apply start
-		if (options.start)
-			query = useStatement(selectStatements.start, query).apply(options.start);
-
-		// apply timeout
-		if (options.timeout)
-			query = useStatement(selectStatements.timeout, query).apply(
-				options.timeout,
-			);
-
-		// apply parallel
-		if (options.parallel)
-			query = useStatement(selectStatements.parallel, query).apply();
-
-		// apply tempfiles
-		if (options.tempfiles)
-			query = useStatement(selectStatements.tempfiles, query).apply();
+		const query = baseQuery
+			.where(options.where ? this.getWhereConditions(options.where) : undefined)
+			.limit(options.one ? 1 : options.limit)
+			.start(options.start)
+			.timeout(options.timeout)
+			.parallel(options.parallel === true)
+			.tempfiles(options.tempfiles === true);
 
 		return query.toQuery().with({
 			// converts the schema to an array schema because we expect an array of results

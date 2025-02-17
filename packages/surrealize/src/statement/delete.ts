@@ -61,7 +61,7 @@ const deleteOnly = createStatement(
 
 const where = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(...conditions: WhereCondition<TSchema>[]) =>
+		(conditions?: WhereCondition<TSchema>[]) =>
 			createBuilder(
 				query.append(buildWhere(conditions)),
 				ctx as BuilderContext<TSchema>,
@@ -76,7 +76,7 @@ const where = createStatement(
 
 const _return = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(type: ReturnType) =>
+		(type?: ReturnType) =>
 			createBuilder(
 				query.append(buildReturn(type)),
 				ctx as BuilderContext<TSchema>,
@@ -90,7 +90,7 @@ const _return = createStatement(
 
 const timeout = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(timeout: DurationLike) =>
+		(timeout?: DurationLike) =>
 			createBuilder(
 				query.append(buildTimeout(timeout)),
 				ctx as BuilderContext<TSchema>,
@@ -103,9 +103,9 @@ const timeout = createStatement(
 
 const parallel = createStatement(
 	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		() =>
+		(append: boolean = true) =>
 			createBuilder(
-				query.append("PARALLEL"),
+				append ? query.append("PARALLEL") : query,
 				ctx as BuilderContext<TSchema>,
 				withBuilderContext as WithBuilderContext<TSchema>,
 			),
