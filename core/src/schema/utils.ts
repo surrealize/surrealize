@@ -1,6 +1,10 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 
-import { type Schema, ValidationError } from "./types.ts";
+import {
+	type InferSchemaOutput,
+	type Schema,
+	ValidationError,
+} from "./types.ts";
 
 /**
  * Validates a value against a schema and returns the validated value.
@@ -11,10 +15,10 @@ import { type Schema, ValidationError } from "./types.ts";
  * @param value The value to validate.
  * @returns The validated value or an error if the validation failed.
  */
-export const parseSchema = async <TOutput>(
-	schema: Schema<unknown, TOutput>,
+export const parseSchema = async <TSchema extends Schema>(
+	schema: TSchema,
 	value: unknown,
-): Promise<TOutput> => {
+): Promise<InferSchemaOutput<TSchema>> => {
 	const standard = schema["~standard"];
 
 	let result = standard.validate(value);
@@ -22,7 +26,7 @@ export const parseSchema = async <TOutput>(
 
 	if (result.issues) throw new ValidationError(result.issues);
 
-	return result.value;
+	return result.value as InferSchemaOutput<TSchema>;
 };
 
 export const mergeSchema = <TInput, TOutput>(

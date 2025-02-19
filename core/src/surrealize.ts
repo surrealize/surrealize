@@ -19,7 +19,7 @@ import {
 	prepareTransaction,
 	resolveQuery,
 } from "./query/utils.ts";
-import type { Schema } from "./schema/types.ts";
+import type { InferSchemaOutput, Schema } from "./schema/types.ts";
 import { parseSchema } from "./schema/utils.ts";
 import { RecordId } from "./type/recordid.ts";
 import { type TargetLike, resolveTarget } from "./type/target.ts";
@@ -95,15 +95,17 @@ export class Surrealize {
 		return this.#engine.version();
 	}
 
-	async execute<TSchemaOutput>(
-		queryLike: QueryLike<TSchemaOutput>,
-	): Promise<TSchemaOutput> {
+	async execute<TSchema extends Schema>(
+		queryLike: QueryLike<TSchema>,
+	): Promise<InferSchemaOutput<TSchema>> {
 		const { template, schema } = resolveQuery(queryLike);
 		const { query, bindings } = prepareQuery(template);
 
 		const [result] = await this.query(query, bindings);
 
-		return (schema ? parseSchema(schema, result) : result) as TSchemaOutput;
+		return (
+			schema ? parseSchema(schema, result) : result
+		) as InferSchemaOutput<TSchema>;
 	}
 
 	async executeAll<const TQueries extends QueriesLike>(
@@ -139,10 +141,10 @@ export class Surrealize {
 	 * @param schema The optional schema to use for validating the result.
 	 * @returns The target from the database.
 	 */
-	async resolve<TOutput>(
+	async resolve<TSchema extends Schema>(
 		targetLike: TargetLike,
-		schema?: Schema<TOutput>,
-	): Promise<TOutput> {
+		schema?: TSchema,
+	): Promise<InferSchemaOutput<TSchema>> {
 		const target = resolveTarget(targetLike);
 
 		const query =

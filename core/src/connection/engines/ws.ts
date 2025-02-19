@@ -5,8 +5,8 @@ import {
 } from "../engine.ts";
 import { DatabaseError } from "../error.ts";
 import type { RpcRequest, RpcResponse, WithId } from "../rpc.ts";
-import { getIncrementalNumber } from "../utils/incremental_number.ts";
-import { ManagedWebSocket } from "../utils/websocket.ts";
+import { Incrementor } from "../utils/incrementor.ts";
+import { WebSocketConnection, WebSocketPool } from "../utils/websocket_pool.ts";
 
 type WebSocketEngineConnection = {
 	namespace?: string;
@@ -15,38 +15,104 @@ type WebSocketEngineConnection = {
 };
 
 export class WebSocketEngine extends AbstractEngine {
-	#socket: ManagedWebSocket;
+	#requestId: Incrementor = new Incrementor();
+	#pool: WebSocketPool;
 	#connection: WebSocketEngineConnection = {};
 	#context: EngineContext;
 
 	constructor(context: EngineContext) {
 		super();
 		this.#context = context;
-		this.#socket = new ManagedWebSocket(this.#getUrl(), {
+
+		this.#pool = new WebSocketPool({
+			url: this.#getUrl(),
 			protocols: "cbor",
-			timeout: this.#context.timeout,
+			size: 1,
+			setupConnection: (connection) => this.#setupConnection(connection),
+
+			readyTimeout: this.#context.timeout,
 		});
 
-		this.#registerSocketListeners();
+		this.#registerEvents();
 	}
 
 	get status(): ConnectionStatus {
-		return this.#socket.status;
+		return this.#pool.status;
 	}
 
 	get ready(): Promise<void> {
-		return this.#socket.ready;
+		return this.#pool.ready;
 	}
 
 	async connect(): Promise<void> {
-		await this.#socket.connect();
+		this.#pool.connect();
+		return this.#pool.ready;
+	}
 
+	async disconnect(): Promise<void> {
+		this.#pool.disconnect();
+	}
+
+	async rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>> {
+		const id = this.#requestId.nextNumber();
+		const responsePromise = this.emitter.waitNext(`rpc-${id}`);
+
+		await this.ready;
+
+		this.#pool.send(
+			this.encodeCbor({
+				id,
+				method: request.method,
+				params: request.params,
+			} satisfies WithId<RpcRequest>),
+		);
+
+		const [response] = await responsePromise;
+		if (response instanceof Error) throw response;
+
+		this.#handleRequest(request, response);
+
+		return response as RpcResponse<TResult>;
+	}
+
+	async #directRpc<TResult>(
+		request: RpcRequest,
+		connection: WebSocketConnection,
+	) {
+		const id = this.#requestId.nextNumber();
+		const responsePromise = this.emitter.waitNext(`rpc-${id}`);
+
+		connection.send(
+			this.encodeCbor({
+				id,
+				method: request.method,
+				params: request.params,
+			} satisfies WithId<RpcRequest>),
+		);
+
+		const [response] = await responsePromise;
+		if (response instanceof Error) throw response;
+
+		this.#handleRequest(request, response);
+
+		return response as RpcResponse<TResult>;
+	}
+
+	async version(): Promise<string> {
+		// TODO implement version method
+		return "surrealdb-2.0.0";
+	}
+
+	async #setupConnection(connection: WebSocketConnection): Promise<void> {
 		// if namespace or database is set, use it
 		if (this.#context.namespace || this.#context.database) {
-			const response = await this.rpc({
-				method: "use",
-				params: [this.#context.namespace, this.#context.database],
-			});
+			const response = await this.#directRpc(
+				{
+					method: "use",
+					params: [this.#context.namespace, this.#context.database],
+				},
+				connection,
+			);
 
 			if (response.error) throw new DatabaseError(response.error);
 		}
@@ -82,39 +148,14 @@ export class WebSocketEngine extends AbstractEngine {
 
 			if (!payload) throw new Error("Invalid auth type");
 
-			const response = await this.rpc({ method: "signin", params: [payload] });
+			const response = await this.#directRpc(
+				{ method: "signin", params: [payload] },
+				connection,
+			);
 			if (response.error) throw new DatabaseError(response.error);
 		}
-	}
 
-	disconnect(): Promise<void> {
-		this.#socket.disconnect();
 		return Promise.resolve();
-	}
-
-	async rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>> {
-		const id = getIncrementalNumber();
-		const responsePromise = this.emitter.waitNext(`rpc-${id}`);
-
-		await this.#socket.send(
-			this.encodeCbor({
-				id,
-				method: request.method,
-				params: request.params,
-			} satisfies WithId<RpcRequest>),
-		);
-
-		const [response] = await responsePromise;
-		if (response instanceof Error) throw response;
-
-		this.#handleRequest(request, response);
-
-		return response as RpcResponse<TResult>;
-	}
-
-	async version(): Promise<string> {
-		// TODO implement version method
-		return "surrealdb-2.0.0";
 	}
 
 	#handleRequest(request: RpcRequest, response: RpcResponse): void {
@@ -163,14 +204,13 @@ export class WebSocketEngine extends AbstractEngine {
 		}
 	}
 
-	#registerSocketListeners() {
-		this.#socket.on("connecting", () => this.emitter.emit("connecting"));
-		this.#socket.on("connected", () => this.emitter.emit("connected"));
-		this.#socket.on("disconnecting", () => this.emitter.emit("disconnecting"));
-		this.#socket.on("disconnected", () => this.emitter.emit("disconnected"));
-		this.#socket.on("error", (error) => this.emitter.emit("error", error));
+	#registerEvents() {
+		this.#pool.on("connecting", () => this.emitter.emit("connecting"));
+		this.#pool.on("connected", () => this.emitter.emit("connected"));
+		this.#pool.on("disconnected", () => this.emitter.emit("disconnected"));
+		this.#pool.on("error", (error) => this.emitter.emit("error", error));
 
-		this.#socket.on("message", async (message) => {
+		this.#pool.on("message", async (message) => {
 			try {
 				const decoded = this.decodeCbor(message);
 
@@ -184,7 +224,7 @@ export class WebSocketEngine extends AbstractEngine {
 					throw new Error("Unexpected response");
 				}
 			} catch (error) {
-				this.#socket.emit(
+				this.#pool.emit(
 					"error",
 					error instanceof Error ? error : new Error("Unknown error"),
 				);
