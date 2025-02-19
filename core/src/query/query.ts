@@ -1,9 +1,9 @@
-import type { Schema } from "../schema/types.ts";
+import type { Schema, UnknownSchema } from "../schema/types.ts";
 import { Surrealize } from "../surrealize.ts";
 import { type TaggedTemplate, tag } from "./template.ts";
 import type { InferQueriesOutput } from "./types.ts";
 
-export type QueryOptions<TOutput = unknown> = {
+export type QueryOptions<TSchema extends Schema = UnknownSchema> = {
 	/**
 	 * An optional connection to use for executing the query.
 	 *
@@ -14,7 +14,7 @@ export type QueryOptions<TOutput = unknown> = {
 	/**
 	 * An optional schema to use for validating the result.
 	 */
-	schema?: Schema<TOutput>;
+	schema?: TSchema;
 };
 
 export type QueryListOptions = {
@@ -26,11 +26,11 @@ export type QueryListOptions = {
 	connection?: Surrealize;
 };
 
-export class Query<TSchema = unknown> {
+export class Query<TSchema extends Schema = UnknownSchema> {
 	readonly template: TaggedTemplate;
 	readonly connection?: Surrealize;
 
-	schema?: Schema<TSchema>;
+	schema?: TSchema;
 
 	constructor(template: TaggedTemplate, options: QueryOptions<TSchema> = {}) {
 		this.template = template;
@@ -45,8 +45,8 @@ export class Query<TSchema = unknown> {
 		});
 	}
 
-	withSchema<TWithSchema = unknown>(
-		schema?: Schema<TWithSchema>,
+	withSchema<TWithSchema extends Schema = UnknownSchema>(
+		schema?: TWithSchema,
 	): Query<TWithSchema> {
 		return new Query(this.template, {
 			connection: this.connection,
@@ -54,7 +54,7 @@ export class Query<TSchema = unknown> {
 		});
 	}
 
-	with<TWithSchema = unknown>(
+	with<TWithSchema extends Schema = UnknownSchema>(
 		options?: QueryOptions<TWithSchema>,
 	): Query<TWithSchema> {
 		return new Query(this.template, options);

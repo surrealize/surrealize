@@ -6,7 +6,10 @@
 	"scripts": {
 		"build": "bun run ./build.ts"
 	},
-	"dependencies": {},
+	"dependencies": {
+		"@standard-schema/spec": "^1.0.0",
+		"@std/cbor": "npm:@jsr/std__cbor@^0.1.6"
+	},
 	"devDependencies": {
 		"@types/bun": "^1.2.2",
 		"tsup": "^8.3.6",

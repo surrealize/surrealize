@@ -1,3 +1,4 @@
+import type { Schema, UnknownSchema } from "../schema/types.ts";
 import type { RawQuery } from "./builder/raw.ts";
 import type { Query } from "./query.ts";
 
@@ -11,22 +12,23 @@ export type PreparedQuery = {
  *
  * This function returns a {@link Query} or a {@link RawQuery}.
  */
-export type Queryable<TSchemaOutput = unknown> = Record<
+export type Queryable<TSchema extends Schema = UnknownSchema> = Record<
 	"toQuery",
-	() => Query<TSchemaOutput> | RawQuery
+	() => Query<TSchema> | RawQuery
 >;
 
 /**
  * A query like type which can be a {@link Query} or a {@link Queryable}.
  */
-export type QueryLike<TSchemaOutput = unknown> =
-	| Query<TSchemaOutput>
-	| Queryable<TSchemaOutput>;
+export type QueryLike<TSchema extends Schema = UnknownSchema> =
+	| Query<TSchema>
+	| Queryable<TSchema>;
 
 /**
  * This is a list of ${@link QueryLike} objects.
  */
-export type QueriesLike<TSchemaOutput = unknown> = QueryLike<TSchemaOutput>[];
+export type QueriesLike<TSchema extends Schema = UnknownSchema> =
+	QueryLike<TSchema>[];
 
 /**
  * Infer the output type of a {@link QueryLike} object.

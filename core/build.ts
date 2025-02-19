@@ -13,6 +13,7 @@ await build({
 	minify: true,
 	platform: "neutral",
 	sourcemap: true,
+	noExternal: Object.keys(packageJson.dependencies),
 });
 
 // write package.json
@@ -47,7 +48,7 @@ await Bun.write(
 
 await Promise.all([
 	copyFile(
-		`${import.meta.dirname}/../../README.md`,
+		`${import.meta.dirname}/../README.md`,
 		`${import.meta.dirname}/dist/README.md`,
 	),
 ]);

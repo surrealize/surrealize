@@ -7,6 +7,7 @@ import {
 	withBuilderContext,
 } from "../query/builder/statements.ts";
 import { merge, tag, tagString } from "../query/template.ts";
+import type { Schema } from "../schema/types.ts";
 import { type DurationLike } from "../type/duration.ts";
 import { type TargetLike, resolveTarget } from "../type/target.ts";
 import { type ContentLike, type SetLike, buildData } from "./shared/data.ts";
@@ -14,7 +15,7 @@ import { type ReturnType, buildReturn } from "./shared/return.ts";
 import { buildTimeout } from "./shared/timeout.ts";
 
 const create = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(targets: TargetLike | TargetLike[]) => {
 			targets = Array.isArray(targets) ? targets : [targets];
 
@@ -44,7 +45,7 @@ const create = createStatement(
 );
 
 const createOnly = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(target: TargetLike) =>
 			createBuilder(
 				query.append(tag`CREATE ONLY ${resolveTarget(target)}`, ""),
@@ -61,7 +62,7 @@ const createOnly = createStatement(
 );
 
 const content = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(content?: ContentLike<TSchema>) =>
 			createBuilder(
 				query.append(
@@ -78,7 +79,7 @@ const content = createStatement(
 );
 
 const set = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(set?: SetLike<TSchema>) =>
 			createBuilder(
 				query.append(set ? buildData({ type: "set", set }) : undefined),
@@ -93,7 +94,7 @@ const set = createStatement(
 );
 
 const _return = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(type?: ReturnType) =>
 			createBuilder(query.append(buildReturn(type)), ctx, {
 				timeout: timeout as typeof timeout<TSchema>,
@@ -103,7 +104,7 @@ const _return = createStatement(
 );
 
 const timeout = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(timeout?: DurationLike) =>
 			createBuilder(query.append(buildTimeout(timeout)), ctx, {
 				parallel: parallel as typeof parallel<TSchema>,
@@ -112,7 +113,7 @@ const timeout = createStatement(
 );
 
 const parallel = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(append = true) =>
 			createBuilder(
 				append ? query.append("PARALLEL") : query,

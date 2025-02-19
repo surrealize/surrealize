@@ -1,3 +1,4 @@
+import type { Schema, UnknownSchema } from "../../schema/types.ts";
 import { Query, type QueryOptions } from "../query.ts";
 import { type TaggedTemplate, isEmpty, merge, tagString } from "../template.ts";
 
@@ -33,9 +34,9 @@ export class RawQuery {
 	 * @param options The options to use for the query.
 	 * @returns The query.
 	 */
-	toQuery<TSchemaOutput>(
-		options?: QueryOptions<TSchemaOutput>,
-	): Query<TSchemaOutput> {
+	toQuery<TSchema extends Schema = UnknownSchema>(
+		options?: QueryOptions<TSchema>,
+	): Query<TSchema> {
 		return new Query(this.template, options);
 	}
 

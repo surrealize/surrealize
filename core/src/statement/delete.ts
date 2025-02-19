@@ -7,6 +7,7 @@ import {
 	withBuilderContext,
 } from "../query/builder/statements.ts";
 import { merge, tag, tagString } from "../query/template.ts";
+import type { Schema } from "../schema/types.ts";
 import { type DurationLike } from "../type/duration.ts";
 import { type TargetLike, resolveTarget } from "../type/target.ts";
 import { type ReturnType, buildReturn } from "./shared/return.ts";
@@ -14,7 +15,7 @@ import { buildTimeout } from "./shared/timeout.ts";
 import { type WhereCondition, buildWhere } from "./shared/where.ts";
 
 const _delete = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(targets: TargetLike | TargetLike[]) => {
 			targets = Array.isArray(targets) ? targets : [targets];
 
@@ -43,7 +44,7 @@ const _delete = createStatement(
 );
 
 const deleteOnly = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(target: TargetLike) => {
 			return createBuilder(
 				query.append(tag`DELETE ONLY ${resolveTarget(target)}`, ""),
@@ -60,7 +61,7 @@ const deleteOnly = createStatement(
 );
 
 const where = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(conditions?: WhereCondition<TSchema>[]) =>
 			createBuilder(
 				query.append(buildWhere(conditions)),
@@ -75,7 +76,7 @@ const where = createStatement(
 );
 
 const _return = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(type?: ReturnType) =>
 			createBuilder(
 				query.append(buildReturn(type)),
@@ -89,7 +90,7 @@ const _return = createStatement(
 );
 
 const timeout = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(timeout?: DurationLike) =>
 			createBuilder(
 				query.append(buildTimeout(timeout)),
@@ -102,7 +103,7 @@ const timeout = createStatement(
 );
 
 const parallel = createStatement(
-	<TSchema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(append: boolean = true) =>
 			createBuilder(
 				append ? query.append("PARALLEL") : query,

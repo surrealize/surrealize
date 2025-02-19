@@ -1,7 +1,8 @@
 {
 	"private": true,
 	"workspaces": [
-		"packages/*"
+		"addons/*",
+		"core"
 	],
 	"scripts": {
 		"test": "bun test",
@@ -15,10 +16,7 @@
 		"@changesets/cli": "^2.28.0",
 		"@std/semver": "npm:@jsr/std__semver@^1.0.4",
 		"@trivago/prettier-plugin-sort-imports": "^5.2.2",
+		"arktype": "^2.0.4",
 		"prettier": "^3.5.1"
-	},
-	"dependencies": {
-		"@standard-schema/spec": "^1.0.0",
-		"@std/cbor": "npm:@jsr/std__cbor@^0.1.6"
 	}
 }

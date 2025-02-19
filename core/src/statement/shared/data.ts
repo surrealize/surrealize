@@ -4,9 +4,10 @@ import {
 	tag,
 	tagString,
 } from "../../query/template.ts";
-import { type Field, enforceField } from "../../query/validation/field.ts";
+import { type InputField, enforceField } from "../../query/validation/field.ts";
+import type { Schema } from "../../schema/types.ts";
 
-export type Data<TSchema> =
+export type Data<TSchema extends Schema> =
 	| { type: "content"; content: ContentLike<TSchema> }
 	| { type: "replace"; replace: ReplaceLike<TSchema> }
 	| { type: "set"; set: SetLike<TSchema> }
@@ -14,23 +15,26 @@ export type Data<TSchema> =
 	| { type: "merge"; merge: MergeLike<TSchema> }
 	| { type: "patch"; patch: PatchLike<TSchema> };
 
-export type ContentLike<TSchema> =
+export type ContentLike<TSchema extends Schema> =
 	TSchema extends Record<string, unknown> ? TSchema : Record<string, unknown>;
 
-export type ReplaceLike<TSchema> =
+export type ReplaceLike<TSchema extends Schema> =
 	TSchema extends Record<string, unknown> ? TSchema : Record<string, unknown>;
 
-export type SetLike<TSchema> = Record<Field<TSchema>, unknown>;
+export type SetLike<TSchema extends Schema> = Record<
+	InputField<TSchema>,
+	unknown
+>;
 
-export type UnsetLike<TSchema> = Field<TSchema>[];
+export type UnsetLike<TSchema extends Schema> = InputField<TSchema>[];
 
 // TODO types
-export type MergeLike<TSchema> = Record<string, unknown>;
+export type MergeLike<_TSchema extends Schema> = Record<string, unknown>;
 
 // TODO types
-export type PatchLike<TSchema> = Record<string, unknown>;
+export type PatchLike<_TSchema extends Schema> = Record<string, unknown>;
 
-export const buildData = <TSchema>(
+export const buildData = <TSchema extends Schema>(
 	data?: Data<TSchema>,
 ): TaggedTemplate | undefined => {
 	if (!data) return;

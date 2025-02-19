@@ -1,11 +1,12 @@
+import type { Schema, UnknownSchema } from "../schema/types.ts";
 import { RawQuery } from "./builder/raw.ts";
 import type { Query } from "./query.ts";
 import { type TaggedTemplate, format, merge, tagString } from "./template.ts";
 import { type PreparedQuery, type QueryLike } from "./types.ts";
 
-export const resolveQuery = <TOutput>(
-	query: QueryLike<TOutput>,
-): Query<TOutput> => {
+export const resolveQuery = <TSchema extends Schema = UnknownSchema>(
+	query: QueryLike<TSchema>,
+): Query<TSchema> => {
 	if ("toQuery" in query) {
 		const toQueryValue = query.toQuery();
 
