@@ -54,10 +54,10 @@ export class WebSocketEngine extends AbstractEngine {
 	}
 
 	async rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>> {
+		await this.ready;
+
 		const id = this.#requestId.nextNumber();
 		const responsePromise = this.emitter.waitNext(`rpc-${id}`);
-
-		await this.ready;
 
 		this.#pool.send(
 			this.encodeCbor({
@@ -68,7 +68,6 @@ export class WebSocketEngine extends AbstractEngine {
 		);
 
 		const [response] = await responsePromise;
-		if (response instanceof Error) throw response;
 
 		this.#handleRequest(request, response);
 
@@ -99,8 +98,9 @@ export class WebSocketEngine extends AbstractEngine {
 	}
 
 	async version(): Promise<string> {
-		// TODO implement version method
-		return "surrealdb-2.0.0";
+		const res = await this.rpc<string>({ method: "version", params: [] });
+		if (res.error) throw new DatabaseError(res.error);
+		return res.result;
 	}
 
 	async #setupConnection(connection: WebSocketConnection): Promise<void> {

@@ -246,7 +246,7 @@ const limit = createStatement(
 	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(limit?: number) => {
 			return createBuilder(
-				limit
+				limit !== undefined
 					? query.append(tagString(`LIMIT ${enforceNumber(limit)}`))
 					: query,
 				ctx,
@@ -267,7 +267,7 @@ const start = createStatement(
 	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
 		(start?: number) => {
 			return createBuilder(
-				start
+				start !== undefined
 					? query.append(tagString(`START ${enforceNumber(start)}`))
 					: query,
 				ctx,

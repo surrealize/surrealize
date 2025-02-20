@@ -1,4 +1,8 @@
-import type { Schema, UnknownSchema } from "../schema/types.ts";
+import type {
+	InferSchemaOutput,
+	Schema,
+	UnknownSchema,
+} from "../schema/types.ts";
 import { Surrealize } from "../surrealize.ts";
 import { type TaggedTemplate, tag } from "./template.ts";
 import type { InferQueriesOutput } from "./types.ts";
@@ -60,7 +64,7 @@ export class Query<TSchema extends Schema = UnknownSchema> {
 		return new Query(this.template, options);
 	}
 
-	async execute(): Promise<TSchema> {
+	async execute(): Promise<InferSchemaOutput<TSchema>> {
 		const connection = this.connection ?? Surrealize.default;
 		if (!connection) throw new Error("No connection provided");
 

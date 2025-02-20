@@ -1,7 +1,7 @@
 import { decodeCbor, encodeCbor } from "./cbor/cbor.ts";
 import type { CborDecoder, CborEncoder } from "./cbor/types.ts";
 import { EventEmitter } from "./emitter.ts";
-import type { RpcRequest, RpcResponse } from "./rpc.ts";
+import type { RpcRequest, RpcResponse, WithId } from "./rpc.ts";
 import type { Auth } from "./types.ts";
 
 export type EngineContext = {
@@ -32,7 +32,7 @@ export type EmitterEvents = {
 	disconnected: [];
 	error: [Error];
 
-	[Key: `rpc-${string}`]: [RpcResponse | Error];
+	[Key: `rpc-${string}`]: [WithId<RpcResponse>];
 	[Key: `live-${string}`]: [any];
 };
 
