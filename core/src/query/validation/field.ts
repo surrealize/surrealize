@@ -1,25 +1,25 @@
 import type {
-	InferSchemaInput,
-	InferSchemaOutput,
-	Schema,
-	UnknownSchema,
-} from "../../schema/types.ts";
+	InferInput,
+	InferResult,
+	SchemaContext,
+	UnknownSchemaContext,
+} from "../../schema/context.ts";
 
-export type OutputField<TSchema extends Schema = UnknownSchema> =
-	unknown extends InferSchemaOutput<TSchema>
+export type Field<TSchema extends SchemaContext = UnknownSchemaContext> =
+	unknown extends InferResult<TSchema>
 		? // in case the schema output is unknown, we can't infer the fields so we allow any string
 			string
 		: // extract the keys of the schema output
 			// TODO allow nested dot notated fields
-			Extract<keyof InferSchemaOutput<TSchema>, string>;
+			Extract<keyof InferResult<TSchema>, string>;
 
-export type InputField<TSchema extends Schema = UnknownSchema> =
-	unknown extends InferSchemaInput<TSchema>
+export type InputField<TSchema extends SchemaContext = UnknownSchemaContext> =
+	unknown extends InferInput<TSchema>
 		? // in case the schema input is unknown, we can't infer the fields so we allow any string
 			string
 		: // extract the keys of the schema input
 			// TODO allow nested dot notated fields
-			Extract<keyof InferSchemaInput<TSchema>, string>;
+			Extract<keyof InferInput<TSchema>, string>;
 
 const fieldRegex = /^([\w\d]+\.)*[\w\d]+$/;
 const fieldWithWildcardRegex = /^(([\w\d]+|\*)\.)*([\w\d]+|\*)$/;

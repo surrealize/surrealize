@@ -4,11 +4,11 @@ import {
 	tag,
 	tagString,
 } from "../../query/template.ts";
-import {
-	type OutputField,
-	enforceField,
-} from "../../query/validation/field.ts";
-import type { Schema, UnknownSchema } from "../../schema/types.ts";
+import { type Field, enforceField } from "../../query/validation/field.ts";
+import type {
+	SchemaContext,
+	UnknownSchemaContext,
+} from "../../schema/context.ts";
 
 export type WhereState = {
 	conditions: WhereCondition[];
@@ -25,10 +25,9 @@ export type CompareOperator =
 	| ">" /* greater than */
 	| ">=" /* greater than or equal */;
 
-export type WhereCondition<TSchema extends Schema = UnknownSchema> =
-	| WhereCompare<OutputField<TSchema>>
-	| WhereAnd<TSchema>
-	| WhereOr<TSchema>;
+export type WhereCondition<
+	TSchema extends SchemaContext = UnknownSchemaContext,
+> = WhereCompare<Field<TSchema>> | WhereAnd<TSchema> | WhereOr<TSchema>;
 
 export type WhereCompare<
 	TField extends string = string,
@@ -36,11 +35,11 @@ export type WhereCompare<
 	TValue = unknown,
 > = { type: "cmp"; field: TField; operator: TOperator; value: TValue };
 
-export type WhereAnd<TSchema extends Schema = UnknownSchema> = {
+export type WhereAnd<TSchema extends SchemaContext = UnknownSchemaContext> = {
 	type: "and";
 	conditions: WhereCondition<TSchema>[];
 };
-export type WhereOr<TSchema extends Schema = UnknownSchema> = {
+export type WhereOr<TSchema extends SchemaContext = UnknownSchemaContext> = {
 	type: "or";
 	conditions: WhereCondition<TSchema>[];
 };
@@ -90,7 +89,7 @@ const formatCondition = (condition: WhereCondition): TaggedTemplate => {
  * @param conditions The conditions to combine.
  * @returns The `AND` condition.
  */
-export const and = <TSchema extends Schema = UnknownSchema>(
+export const and = <TSchema extends SchemaContext = UnknownSchemaContext>(
 	...conditions: WhereCondition<TSchema>[]
 ): WhereAnd<TSchema> => {
 	return { type: "and", conditions };
@@ -102,7 +101,7 @@ export const and = <TSchema extends Schema = UnknownSchema>(
  * @param conditions The conditions to combine.
  * @returns The `OR` condition.
  */
-export const or = <TSchema extends Schema = UnknownSchema>(
+export const or = <TSchema extends SchemaContext = UnknownSchemaContext>(
 	...conditions: WhereCondition<TSchema>[]
 ): WhereOr<TSchema> => {
 	return { type: "or", conditions };

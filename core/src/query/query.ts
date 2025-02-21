@@ -1,13 +1,9 @@
-import type {
-	InferSchemaOutput,
-	Schema,
-	UnknownSchema,
-} from "../schema/types.ts";
+import type { StandardSchema } from "../schema/standard.ts";
 import { Surrealize } from "../surrealize.ts";
 import { type TaggedTemplate, tag } from "./template.ts";
 import type { InferQueriesOutput } from "./types.ts";
 
-export type QueryOptions<TSchema extends Schema = UnknownSchema> = {
+export type QueryOptions<TOutput = unknown> = {
 	/**
 	 * An optional connection to use for executing the query.
 	 *
@@ -18,7 +14,7 @@ export type QueryOptions<TSchema extends Schema = UnknownSchema> = {
 	/**
 	 * An optional schema to use for validating the result.
 	 */
-	schema?: TSchema;
+	schema?: StandardSchema<unknown, TOutput>;
 };
 
 export type QueryListOptions = {
@@ -30,41 +26,41 @@ export type QueryListOptions = {
 	connection?: Surrealize;
 };
 
-export class Query<TSchema extends Schema = UnknownSchema> {
+export class Query<TOutput = unknown> {
 	readonly template: TaggedTemplate;
 	readonly connection?: Surrealize;
 
-	schema?: TSchema;
+	schema?: StandardSchema<unknown, TOutput>;
 
-	constructor(template: TaggedTemplate, options: QueryOptions<TSchema> = {}) {
+	constructor(template: TaggedTemplate, options: QueryOptions<TOutput> = {}) {
 		this.template = template;
 		this.connection = options.connection;
 		this.schema = options.schema;
 	}
 
-	withConnection(connection: Surrealize): Query<TSchema> {
+	withConnection(connection: Surrealize): Query<TOutput> {
 		return new Query(this.template, {
 			connection,
 			schema: this.schema,
 		});
 	}
 
-	withSchema<TWithSchema extends Schema = UnknownSchema>(
-		schema?: TWithSchema,
-	): Query<TWithSchema> {
+	withSchema<TWithOutput = unknown>(
+		schema?: StandardSchema<unknown, TWithOutput>,
+	): Query<TWithOutput> {
 		return new Query(this.template, {
 			connection: this.connection,
 			schema,
 		});
 	}
 
-	with<TWithSchema extends Schema = UnknownSchema>(
-		options?: QueryOptions<TWithSchema>,
-	): Query<TWithSchema> {
+	with<TWithOutput = unknown>(
+		options?: QueryOptions<TWithOutput>,
+	): Query<TWithOutput> {
 		return new Query(this.template, options);
 	}
 
-	async execute(): Promise<InferSchemaOutput<TSchema>> {
+	async execute(): Promise<TOutput> {
 		const connection = this.connection ?? Surrealize.default;
 		if (!connection) throw new Error("No connection provided");
 

@@ -1,4 +1,4 @@
-import type { Schema } from "../schema/types.ts";
+import type { StandardSchema } from "../schema/standard.ts";
 import { Surrealize } from "../surrealize.ts";
 import { Table, type TableLike } from "./table.ts";
 import { UUID } from "./uuid.ts";
@@ -65,7 +65,7 @@ export class RecordId<
 	 * @param options The options to resolve the record.
 	 * @returns The resolved record.
 	 */
-	async resolve<TSchema extends Schema>(
+	async resolve<TOutput>(
 		options: {
 			/**
 			 * The surrealize connection to use for resolving the record.
@@ -77,7 +77,7 @@ export class RecordId<
 			/**
 			 * The schema to use for validating the resolved record.
 			 */
-			schema?: TSchema;
+			schema?: StandardSchema<unknown, TOutput>;
 		} = {},
 	) {
 		const connection = options.connection ?? Surrealize.default;

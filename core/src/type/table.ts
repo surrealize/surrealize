@@ -1,4 +1,11 @@
+import type { SchemaContext } from "../schema/context.ts";
+import type { RecordSchemaContext } from "./record.ts";
 import { RecordId, type RecordIdValue } from "./recordid.ts";
+
+export type InferTableFromSchema<TSchema extends SchemaContext> =
+	TSchema extends RecordSchemaContext<infer TRecordId>
+		? TRecordId["table"]
+		: string;
 
 /**
  * A type which represents multiple way of specifying a table.

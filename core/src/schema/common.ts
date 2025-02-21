@@ -1,7 +1,11 @@
-import type { StandardSchemaV1 } from "@standard-schema/spec";
-
-import type { Schema } from "./types.ts";
-import { mergeSchema, parseSchema } from "./utils.ts";
+import {
+	type InferStandardInput,
+	type InferStandardOutput,
+	type StandardSchema,
+	type StandardSchemaResult,
+	mergeSchema,
+	parseSchema,
+} from "./standard.ts";
 
 /**
  * A schema which accepts undefined values.
@@ -9,7 +13,7 @@ import { mergeSchema, parseSchema } from "./utils.ts";
  * @param value The value to validate.
  * @returns undefined if the value is undefined, otherwise throws an error.
  */
-export const undefinedSchema: Schema<undefined> = {
+export const undefinedSchema: StandardSchema<undefined> = {
 	"~standard": {
 		version: 1,
 		vendor: "surrealize",
@@ -26,7 +30,7 @@ export const undefinedSchema: Schema<undefined> = {
  * @param value The value to return.
  * @returns A schema which always returns the specified value.
  */
-export const alwaysTo = <T>(value: T): Schema<T> => ({
+export const alwaysTo = <T>(value: T): StandardSchema<T> => ({
 	"~standard": {
 		version: 1,
 		vendor: "surrealize",
@@ -42,12 +46,19 @@ export const alwaysTo = <T>(value: T): Schema<T> => ({
  * @param schema The schema to convert.
  * @returns The schema as an array.
  */
-export const convertSchemaArray = <const TSchemaOutput>(
-	schema: Schema<TSchemaOutput>,
-): Schema<TSchemaOutput[]> => {
+export const asArraySchema = <TSchema extends StandardSchema>(
+	schema?: TSchema,
+):
+	| StandardSchema<
+			InferStandardInput<TSchema>[],
+			InferStandardOutput<TSchema>[]
+	  >
+	| undefined => {
+	if (!schema) return undefined;
+
 	const validate = async (
 		value: unknown,
-	): Promise<StandardSchemaV1.Result<TSchemaOutput[]>> => {
+	): Promise<StandardSchemaResult<InferStandardOutput<TSchema>[]>> => {
 		if (!Array.isArray(value))
 			return { issues: [{ message: "Expected array" }] };
 		const results = await Promise.all(
@@ -65,8 +76,17 @@ export const convertSchemaArray = <const TSchemaOutput>(
 	};
 };
 
-export const convertSchemaUndefinable = <TSchema>(
-	schema: Schema<TSchema>,
-): Schema<TSchema | undefined> => {
-	return mergeSchema([schema, undefinedSchema]);
+export const withUndefinedSchema = <TSchema extends StandardSchema>(
+	schema?: TSchema,
+):
+	| StandardSchema<
+			InferStandardInput<TSchema> | undefined,
+			InferStandardOutput<TSchema> | undefined
+	  >
+	| undefined => {
+	if (!schema) return undefined;
+	return mergeSchema([schema, undefinedSchema]) as StandardSchema<
+		InferStandardInput<TSchema> | undefined,
+		InferStandardOutput<TSchema> | undefined
+	>;
 };

@@ -1,17 +1,18 @@
-import type { Schema } from "../schema/types.ts";
+import type { InferResult } from "../schema/context.ts";
+import type { StandardSchema } from "../schema/standard.ts";
 import type { WhereCondition } from "../statement/shared/where.ts";
 import type { DurationLike } from "../type/duration.ts";
+import type { RecordSchemaContext } from "../type/record.ts";
+import type { InferTableFromSchema } from "../type/table.ts";
 import type { TargetLike } from "../type/target.ts";
 import type { DeepPartial } from "../utils/object.ts";
 
-export type RepositoryWhere<TSchemaOutput> =
-	TSchemaOutput extends Record<string, unknown>
-		? DeepPartial<TSchemaOutput> | WhereCondition<TSchemaOutput>[]
+export type RepositoryWhere<TSchema extends RecordSchemaContext> =
+	InferResult<TSchema> extends Record<string, unknown>
+		? DeepPartial<InferResult<TSchema>> | WhereCondition<TSchema>[]
 		: Record<string, unknown> | WhereCondition[];
 
-export type RepositoryFindOptions<TSchemaOutput> = {
-	where?: RepositoryWhere<NoInfer<TSchemaOutput>>;
-
+export type RepositoryFindByOptions = {
 	limit?: number;
 	start?: number;
 	parallel?: boolean;
@@ -19,22 +20,12 @@ export type RepositoryFindOptions<TSchemaOutput> = {
 	timeout?: DurationLike;
 };
 
-export type RepositoryFindByOptions<TSchemaOutput> = Omit<
-	RepositoryFindOptions<TSchemaOutput>,
-	"where"
->;
+export type RepositoryFindOneByOptions = Omit<RepositoryFindByOptions, "limit">;
 
-export type RepositoryFindOneOptions<TSchemaOutput> = Omit<
-	RepositoryFindOptions<TSchemaOutput>,
-	"limit"
->;
-
-export type RepositoryFindOneByOptions<TSchemaOutput> = Omit<
-	RepositoryFindByOptions<TSchemaOutput>,
-	"where" | "limit"
->;
-
-export type RepositoryRawQueryOptions<TSchemaOutput> = {
+export type RepositoryRawQueryOptions<
+	TSchema extends RecordSchemaContext,
+	TOutput,
+> = {
 	/**
 	 * Indicates if only one record should be returned.
 	 */
@@ -45,9 +36,9 @@ export type RepositoryRawQueryOptions<TSchemaOutput> = {
 	 *
 	 * If not provided, it will default to the table of the repository.
 	 */
-	target?: TargetLike;
+	target?: TargetLike<InferTableFromSchema<TSchema>>;
 
-	where?: RepositoryWhere<unknown>;
+	where?: RepositoryWhere<TSchema>;
 
 	limit?: number;
 	start?: number;
@@ -55,5 +46,5 @@ export type RepositoryRawQueryOptions<TSchemaOutput> = {
 	tempfiles?: boolean;
 	timeout?: DurationLike;
 
-	schema?: Schema<TSchemaOutput>;
+	schema?: StandardSchema<unknown, TOutput>;
 };

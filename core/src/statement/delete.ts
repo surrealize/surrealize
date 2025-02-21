@@ -1,13 +1,12 @@
 import type { RawQuery } from "../query/builder/raw.ts";
 import {
 	type BuilderContext,
-	type WithBuilderContext,
 	createBuilder,
 	createStatement,
 	withBuilderContext,
 } from "../query/builder/statements.ts";
 import { merge, tag, tagString } from "../query/template.ts";
-import type { Schema } from "../schema/types.ts";
+import type { SchemaContext } from "../schema/context.ts";
 import { type DurationLike } from "../type/duration.ts";
 import { type TargetLike, resolveTarget } from "../type/target.ts";
 import { type ReturnType, buildReturn } from "./shared/return.ts";
@@ -15,7 +14,10 @@ import { buildTimeout } from "./shared/timeout.ts";
 import { type WhereCondition, buildWhere } from "./shared/where.ts";
 
 const _delete = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(targets: TargetLike | TargetLike[]) => {
 			targets = Array.isArray(targets) ? targets : [targets];
 
@@ -38,13 +40,16 @@ const _delete = createStatement(
 				return: _return as typeof _return<TSchema>,
 				timeout: timeout as typeof timeout<TSchema>,
 				parallel: parallel as typeof parallel<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
+				...withBuilderContext<TSchema>(),
 			});
 		},
 );
 
 const deleteOnly = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(target: TargetLike) => {
 			return createBuilder(
 				query.append(tag`DELETE ONLY ${resolveTarget(target)}`, ""),
@@ -54,14 +59,17 @@ const deleteOnly = createStatement(
 					return: _return as typeof _return<TSchema>,
 					timeout: timeout as typeof timeout<TSchema>,
 					parallel: parallel as typeof parallel<TSchema>,
-					...(withBuilderContext as WithBuilderContext<TSchema>),
+					...withBuilderContext<TSchema>(),
 				},
 			);
 		},
 );
 
 const where = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(conditions?: WhereCondition<TSchema>[]) =>
 			createBuilder(
 				query.append(buildWhere(conditions)),
@@ -70,13 +78,16 @@ const where = createStatement(
 					return: _return as typeof _return<TSchema>,
 					timeout: timeout as typeof timeout<TSchema>,
 					parallel: parallel as typeof parallel<TSchema>,
-					...(withBuilderContext as WithBuilderContext<TSchema>),
+					...withBuilderContext<TSchema>(),
 				},
 			),
 );
 
 const _return = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(type?: ReturnType) =>
 			createBuilder(
 				query.append(buildReturn(type)),
@@ -84,31 +95,37 @@ const _return = createStatement(
 				{
 					timeout: timeout as typeof timeout<TSchema>,
 					parallel: parallel as typeof parallel<TSchema>,
-					...(withBuilderContext as WithBuilderContext<TSchema>),
+					...withBuilderContext<TSchema>(),
 				},
 			),
 );
 
 const timeout = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(timeout?: DurationLike) =>
 			createBuilder(
 				query.append(buildTimeout(timeout)),
 				ctx as BuilderContext<TSchema>,
 				{
 					parallel: parallel as typeof parallel<TSchema>,
-					...(withBuilderContext as WithBuilderContext<TSchema>),
+					...withBuilderContext<TSchema>(),
 				},
 			),
 );
 
 const parallel = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(append: boolean = true) =>
 			createBuilder(
 				append ? query.append("PARALLEL") : query,
 				ctx as BuilderContext<TSchema>,
-				withBuilderContext as WithBuilderContext<TSchema>,
+				withBuilderContext<TSchema>(),
 			),
 );
 

@@ -1,6 +1,6 @@
 import { RawQuery } from "./query/builder/raw.ts";
 import { type Builder, createBuilder } from "./query/builder/statements.ts";
-import type { Schema, UnknownSchema } from "./schema/types.ts";
+import type { SchemaContext, UnknownSchemaContext } from "./schema/context.ts";
 import { create, createOnly } from "./statement/create.ts";
 import { delete as _delete, deleteOnly } from "./statement/delete.ts";
 import { select, selectValue } from "./statement/select.ts";
@@ -25,7 +25,9 @@ const statements = {
 	upsertOnly,
 };
 
-export type DefaultBuilder<TSchema extends Schema = UnknownSchema> = Builder<{
+export type DefaultBuilder<
+	TSchema extends SchemaContext = UnknownSchemaContext,
+> = Builder<{
 	create: typeof create<TSchema>;
 	createOnly: typeof createOnly<TSchema>;
 
@@ -44,7 +46,7 @@ export type DefaultBuilder<TSchema extends Schema = UnknownSchema> = Builder<{
 
 export const q: DefaultBuilder = createBuilder(new RawQuery(), {}, statements);
 
-export const createDefaultBuilder = <TSchema extends Schema>(options?: {
+export const createDefaultBuilder = <TSchema extends SchemaContext>(options?: {
 	schema?: TSchema;
 	connection?: Surrealize;
 }): DefaultBuilder<TSchema> => {
@@ -55,5 +57,5 @@ export const createDefaultBuilder = <TSchema extends Schema>(options?: {
 			connection: options?.connection,
 		},
 		statements,
-	) as DefaultBuilder<TSchema>;
+	);
 };

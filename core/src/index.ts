@@ -33,9 +33,7 @@ export type {
 export { Repository, type RepositoryOptions } from "./repository/repository.ts";
 export type {
 	RepositoryWhere,
-	RepositoryFindOptions,
 	RepositoryFindByOptions,
-	RepositoryFindOneOptions,
 	RepositoryFindOneByOptions,
 } from "./repository/types.ts";
 
@@ -60,7 +58,21 @@ export {
 } from "./type/target.ts";
 export { UUID } from "./type/uuid.ts";
 
-export { type Schema, type InferSchemaOutput } from "./schema/types.ts";
-export { mergeSchema, parseSchema } from "./schema/utils.ts";
+export {
+	type InferStandardInput,
+	type InferStandardOutput,
+	ValidationError,
+	type StandardSchema,
+	mergeSchema,
+	parseSchema,
+} from "./schema/standard.ts";
+export type {
+	SchemaContext,
+	InferInput,
+	InferResult,
+	AnySchemaContext,
+	UnknownSchemaContext,
+} from "./schema/context.ts";
+export { createSchemaContext } from "./schema/utils.ts";
 
 export { flatten, keep } from "./utils/flatten.ts";

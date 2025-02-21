@@ -1,28 +1,31 @@
 import type { RawQuery } from "../query/builder/raw.ts";
 import {
 	type BuilderContext,
-	type WithBuilderContext,
 	createBuilder,
 	createStatement,
 	withBuilderContext,
 } from "../query/builder/statements.ts";
 import { merge, tag, tagString } from "../query/template.ts";
 import {
-	type OutputField,
+	type Field,
 	enforceField,
 	enforceFields,
 } from "../query/validation/field.ts";
 import { enforceName, enforceNumber } from "../query/validation/primitives.ts";
-import type { Schema } from "../schema/types.ts";
+import type { SchemaContext } from "../schema/context.ts";
 import { type DurationLike } from "../type/duration.ts";
+import type { InferTableFromSchema } from "../type/table.ts";
 import { type TargetLike, resolveTarget } from "../type/target.ts";
 import { type OrderFields, buildOrder } from "./shared/order.ts";
 import { buildTimeout } from "./shared/timeout.ts";
 import { type WhereCondition, buildWhere } from "./shared/where.ts";
 
 const select = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(fields: OutputField<TSchema>[] | "*" = "*") => {
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
+		(fields: Field<TSchema>[] | "*" = "*") => {
 			let newQuery = query.append("SELECT", "");
 
 			if (fields === "*") {
@@ -36,14 +39,17 @@ const select = createStatement(
 			return createBuilder(newQuery, ctx, {
 				from: from as typeof from<TSchema>,
 				fromOnly: fromOnly as typeof fromOnly<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
+				...withBuilderContext<TSchema>(),
 			});
 		},
 );
 
 const selectValue = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(field: OutputField<TSchema>) => {
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
+		(field: Field<TSchema>) => {
 			const newQuery = query.append(
 				tagString(`SELECT VALUE ${enforceField(field, "wildcard")}`),
 				"",
@@ -52,14 +58,21 @@ const selectValue = createStatement(
 			return createBuilder(newQuery, ctx, {
 				from: from as typeof from<TSchema>,
 				fromOnly: fromOnly as typeof fromOnly<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
+				...withBuilderContext<TSchema>(),
 			});
 		},
 );
 
 const from = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(targets: TargetLike | TargetLike[]) => {
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
+		(
+			targets:
+				| TargetLike<InferTableFromSchema<TSchema>>
+				| TargetLike<InferTableFromSchema<TSchema>>[],
+		) => {
 			targets = Array.isArray(targets) ? targets : [targets];
 
 			const newQuery = query.append(
@@ -88,14 +101,17 @@ const from = createStatement(
 				parallel: parallel as typeof parallel<TSchema>,
 				tempfiles: tempfiles as typeof tempfiles<TSchema>,
 				explain: explain as typeof explain<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
+				...withBuilderContext<TSchema>(),
 			});
 		},
 );
 
 const fromOnly = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(target: TargetLike) => {
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
+		(target: TargetLike<InferTableFromSchema<TSchema>>) => {
 			return createBuilder(
 				query.append(tag`FROM ONLY ${resolveTarget(target)}`),
 				ctx,
@@ -112,14 +128,17 @@ const fromOnly = createStatement(
 					parallel: parallel as typeof parallel<TSchema>,
 					tempfiles: tempfiles as typeof tempfiles<TSchema>,
 					explain: explain as typeof explain<TSchema>,
-					...(withBuilderContext as WithBuilderContext<TSchema>),
+					...withBuilderContext<TSchema>(),
 				},
 			);
 		},
 );
 
 const _with = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(indexes?: string[]) => {
 			const newQuery = indexes
 				? indexes.length === 0
@@ -150,13 +169,16 @@ const _with = createStatement(
 				parallel: parallel as typeof parallel<TSchema>,
 				tempfiles: tempfiles as typeof tempfiles<TSchema>,
 				explain: explain as typeof explain<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
+				...withBuilderContext<TSchema>(),
 			});
 		},
 );
 
 const where = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(conditions?: WhereCondition<TSchema>[]) => {
 			return createBuilder(query.append(buildWhere(conditions)), ctx, {
 				split: split as typeof split<TSchema>,
@@ -169,14 +191,17 @@ const where = createStatement(
 				parallel: parallel as typeof parallel<TSchema>,
 				tempfiles: tempfiles as typeof tempfiles<TSchema>,
 				explain: explain as typeof explain<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
+				...withBuilderContext<TSchema>(),
 			});
 		},
 );
 
 const split = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(field?: OutputField<TSchema>) => {
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
+		(field?: Field<TSchema>) => {
 			return createBuilder(
 				field ? query.append(tagString(`SPLIT ${enforceField(field)}`)) : query,
 				ctx,
@@ -190,15 +215,18 @@ const split = createStatement(
 					parallel: parallel as typeof parallel<TSchema>,
 					tempfiles: tempfiles as typeof tempfiles<TSchema>,
 					explain: explain as typeof explain<TSchema>,
-					...(withBuilderContext as WithBuilderContext<TSchema>),
+					...withBuilderContext<TSchema>(),
 				},
 			);
 		},
 );
 
 const group = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(fields?: OutputField<TSchema>[]) => {
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
+		(fields?: Field<TSchema>[]) => {
 			const newQuery =
 				!fields || fields.length === 0
 					? query
@@ -221,13 +249,16 @@ const group = createStatement(
 				parallel: parallel as typeof parallel<TSchema>,
 				tempfiles: tempfiles as typeof tempfiles<TSchema>,
 				explain: explain as typeof explain<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
+				...withBuilderContext<TSchema>(),
 			});
 		},
 );
 
 const order = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(fields?: OrderFields<TSchema>) => {
 			return createBuilder(query.append(buildOrder(fields)), ctx, {
 				limit: limit as typeof limit<TSchema>,
@@ -237,13 +268,16 @@ const order = createStatement(
 				parallel: parallel as typeof parallel<TSchema>,
 				tempfiles: tempfiles as typeof tempfiles<TSchema>,
 				explain: explain as typeof explain<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
+				...withBuilderContext<TSchema>(),
 			});
 		},
 );
 
 const limit = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(limit?: number) => {
 			return createBuilder(
 				limit !== undefined
@@ -257,14 +291,17 @@ const limit = createStatement(
 					parallel: parallel as typeof parallel<TSchema>,
 					tempfiles: tempfiles as typeof tempfiles<TSchema>,
 					explain: explain as typeof explain<TSchema>,
-					...(withBuilderContext as WithBuilderContext<TSchema>),
+					...withBuilderContext<TSchema>(),
 				},
 			);
 		},
 );
 
 const start = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(start?: number) => {
 			return createBuilder(
 				start !== undefined
@@ -277,15 +314,18 @@ const start = createStatement(
 					parallel: parallel as typeof parallel<TSchema>,
 					tempfiles: tempfiles as typeof tempfiles<TSchema>,
 					explain: explain as typeof explain<TSchema>,
-					...(withBuilderContext as WithBuilderContext<TSchema>),
+					...withBuilderContext<TSchema>(),
 				},
 			);
 		},
 );
 
 const fetch = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
-		(fields?: OutputField<TSchema>[]) => {
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
+		(fields?: Field<TSchema>[]) => {
 			const newQuery =
 				!fields || fields.length === 0
 					? // do nothing if no fields are provided
@@ -306,53 +346,65 @@ const fetch = createStatement(
 				parallel: parallel as typeof parallel<TSchema>,
 				tempfiles: tempfiles as typeof tempfiles<TSchema>,
 				explain: explain as typeof explain<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
+				...withBuilderContext<TSchema>(),
 			});
 		},
 );
 
 const timeout = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(timeout?: DurationLike) => {
 			return createBuilder(query.append(buildTimeout(timeout)), ctx, {
 				parallel: parallel as typeof parallel<TSchema>,
 				tempfiles: tempfiles as typeof tempfiles<TSchema>,
 				explain: explain as typeof explain<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
+				...withBuilderContext<TSchema>(),
 			});
 		},
 );
 
 const parallel = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(append = true) => {
 			return createBuilder(append ? query.append("PARALLEL") : query, ctx, {
 				tempfiles: tempfiles as typeof tempfiles<TSchema>,
 				explain: explain as typeof explain<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
+				...withBuilderContext<TSchema>(),
 			});
 		},
 );
 
 const tempfiles = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(append = true) => {
 			return createBuilder(append ? query.append("TEMPFILES") : query, ctx, {
 				explain: explain as typeof explain<TSchema>,
-				...(withBuilderContext as WithBuilderContext<TSchema>),
+				...withBuilderContext<TSchema>(),
 			});
 		},
 );
 
 const explain = createStatement(
-	<TSchema extends Schema>(query: RawQuery, ctx: BuilderContext<TSchema>) =>
+	<TSchema extends SchemaContext>(
+		query: RawQuery,
+		ctx: BuilderContext<TSchema>,
+	) =>
 		(options?: { full?: boolean } | false) => {
 			return createBuilder(
 				options !== false
 					? query.append(options?.full ? "EXPLAIN FULL" : "EXPLAIN")
 					: query,
 				ctx,
-				withBuilderContext as WithBuilderContext<TSchema>,
+				withBuilderContext<TSchema>(),
 			);
 		},
 );

@@ -1,9 +1,14 @@
-import type { AnySchema, Schema } from "../../schema/types.ts";
+import type {
+	AnySchemaContext,
+	InferResult,
+	SchemaContext,
+} from "../../schema/context.ts";
+import type { StandardSchema } from "../../schema/standard.ts";
 import type { Surrealize } from "../../surrealize.ts";
 import { Query } from "../query.ts";
 import { RawQuery } from "./raw.ts";
 
-export type BuilderContext<TSchema extends Schema = AnySchema> = {
+export type BuilderContext<TSchema extends SchemaContext = AnySchemaContext> = {
 	schema?: TSchema;
 	connection?: Surrealize;
 };
@@ -42,11 +47,11 @@ export const createBuilder = <TStatements extends Record<string, Statement>>(
 	return builder as Builder<TStatements>;
 };
 
-export type WithBuilderContext<TSchema extends Schema> = {
+export type WithBuilderContext<TSchema extends SchemaContext> = {
 	toQuery: (
 		query: RawQuery,
 		ctx: BuilderContext<TSchema>,
-	) => () => Query<TSchema>;
+	) => () => Query<InferResult<TSchema>>;
 
 	"~builder": (
 		query: RawQuery,
@@ -57,8 +62,15 @@ export type WithBuilderContext<TSchema extends Schema> = {
 	};
 };
 
-export const withBuilderContext: WithBuilderContext<any> = {
+export const withBuilderContext = <
+	TSchema extends SchemaContext,
+>(): WithBuilderContext<TSchema> => ({
 	toQuery: (query, ctx) => () =>
-		query.toQuery({ schema: ctx.schema, connection: ctx.connection }),
+		query.toQuery<InferResult<TSchema>>({
+			schema: ctx.schema?.result as
+				| StandardSchema<unknown, InferResult<TSchema>>
+				| undefined,
+			connection: ctx.connection,
+		}),
 	"~builder": (query, ctx) => () => ({ query, ctx }),
-};
+});

@@ -1,61 +1,37 @@
-import { type Query, QueryList } from "../query/query.ts";
+import { type Query } from "../query/query.ts";
 import {
 	alwaysTo,
-	convertSchemaArray,
-	convertSchemaUndefinable,
+	asArraySchema,
+	withUndefinedSchema,
 } from "../schema/common.ts";
-import type { Schema } from "../schema/types.ts";
+import type { InferInput, InferResult } from "../schema/context.ts";
 import type { ContentLike, SetLike } from "../statement/shared/data.ts";
 import type { WhereCondition } from "../statement/shared/where.ts";
-import { type DefaultBuilder, createDefaultBuilder, q } from "../statements.ts";
+import { type DefaultBuilder, createDefaultBuilder } from "../statements.ts";
 import type { Surrealize } from "../surrealize.ts";
-import type { AnyRecord, Record } from "../type/record.ts";
-import { RecordId, type RecordIdLike } from "../type/recordid.ts";
-import { Table, type TableLike } from "../type/table.ts";
-import { flatten } from "../utils/flatten.ts";
-import type { PartialOnly } from "../utils/object.ts";
+import type {
+	OptionalId,
+	RecordSchemaContext,
+	RequiredId,
+} from "../type/record.ts";
+import type { RecordId, RecordIdLike } from "../type/recordid.ts";
+import {
+	type InferTableFromSchema,
+	Table,
+	type TableLike,
+} from "../type/table.ts";
 import type {
 	RepositoryFindByOptions,
 	RepositoryFindOneByOptions,
-	RepositoryFindOneOptions,
-	RepositoryFindOptions,
 	RepositoryRawQueryOptions,
 	RepositoryWhere,
 } from "./types.ts";
 import { convertFilterObjectToConditions } from "./utils.ts";
 
-export type RepositoryOptions<TRecord extends Record> = {
+export type RepositoryOptions<TSchema extends RecordSchemaContext> = {
 	connection?: Surrealize;
-	schema?: Schema<TRecord>;
+	schema?: TSchema;
 };
-
-// TODO rething repo api.
-// Get inspire by mongodb api
-
-/**
- *
- * findOne (filter: RepositoryWhere<TRecord>, options: ...): Promise<TRecord | undefined>
- * findMany (filter: RepositoryWhere<TRecord>, options: ...): Promise<TRecord[]>
- *
- * createOne (record: TRecord, options: ...): Promise<TRecord>
- * createMany (records: TRecord[], options: ...): Promise<TRecord[]>
- *
- * upsertOne (record: TRecord, options: ...): Promise<TRecord>
- * upsertMany (records: TRecord[], options: ...): Promise<TRecord[]>
- *
- * updateOne (filter: RepositoryWhere<TRecord>, update: Partial<TRecord>, options: ...): Promise<TRecord>
- * updateMany (filter: RepositoryWhere<TRecord>, update: Partial<TRecord>, options: ...): Promise<TRecord[]>
- *
- * deleteOne (filter: RepositoryWhere<TRecord>, options: ...): Promise<TRecord>
- * deleteMany (filter: RepositoryWhere<TRecord>, options: ...): Promise<TRecord[]>
- *
- * - Additional methods?
- *
- * count (filter: RepositoryWhere<TRecord>): Promise<number>
- *
- */
-
-//
 
 /**
  * An repository is an easy to use interface to communicate with the database.
@@ -64,230 +40,176 @@ export type RepositoryOptions<TRecord extends Record> = {
  */
 export class Repository<
 	TTable extends string,
-	TRecord extends Record<TTable> = AnyRecord<TTable>,
+	TSchema extends RecordSchemaContext<RecordId<TTable>>,
 > {
-	readonly table: Table<TTable>;
-	readonly options: RepositoryOptions<TRecord>;
-	readonly q: DefaultBuilder<TRecord>;
+	readonly table: Table<InferTableFromSchema<TSchema>>;
+	readonly q: DefaultBuilder<TSchema>;
+	readonly schema?: TSchema;
+	readonly connection?: Surrealize;
 
 	constructor(
 		table: TableLike<TTable>,
-		options: RepositoryOptions<TRecord> = {},
+		options: RepositoryOptions<TSchema> = {},
 	) {
-		this.table = Table.from(table);
-		this.options = options;
+		this.table = Table.from(table) as Table<InferTableFromSchema<TSchema>>;
+
+		this.schema = options.schema;
+		this.connection = options.connection;
+
 		this.q = createDefaultBuilder({
-			connection: options.connection,
-			schema: options.schema,
+			schema: this.schema,
+			connection: this.connection,
 		});
 	}
 
-	find(options: RepositoryFindOptions<TRecord> = {}): Query<TRecord[]> {
-		return this.query({
-			one: false,
-
-			...options,
-
-			schema: this.options.schema
-				? convertSchemaArray(this.options.schema)
-				: undefined,
-		});
+	find(options?: RepositoryFindByOptions): Query<InferResult<TSchema>[]> {
+		return this.findBy(undefined, options);
 	}
 
 	findBy(
-		where: RepositoryWhere<TRecord>,
-		options: RepositoryFindByOptions<TRecord> = {},
-	): Query<TRecord[]> {
+		where?: RepositoryWhere<TSchema>,
+		options?: RepositoryFindByOptions,
+	): Query<InferResult<TSchema>[]> {
 		return this.query({
 			one: false,
 			where,
-
 			...options,
-
-			schema: this.options.schema
-				? convertSchemaArray(this.options.schema)
-				: undefined,
-		});
-	}
-
-	findOne(
-		options: RepositoryFindOneOptions<TRecord> = {},
-	): Query<TRecord | undefined> {
-		return this.query({
-			one: true,
-
-			...options,
-
-			schema: this.options.schema
-				? convertSchemaUndefinable(this.options.schema)
-				: undefined,
 		});
 	}
 
 	findOneBy(
-		where: RepositoryWhere<TRecord>,
-		options: RepositoryFindOneByOptions<TRecord> = {},
-	): Query<TRecord | undefined> {
+		where: RepositoryWhere<TSchema>,
+		options?: RepositoryFindOneByOptions,
+	): Query<InferResult<TSchema> | undefined> {
 		return this.query({
 			one: true,
 			where,
-
 			...options,
-
-			schema: this.options.schema
-				? convertSchemaUndefinable(this.options.schema)
-				: undefined,
-		});
+			schema: withUndefinedSchema(this.schema?.result),
+		}) as Query<InferResult<TSchema> | undefined>;
 	}
 
-	findById(id: RecordIdLike<TTable>): Query<TRecord | undefined> {
-		const recordId = RecordId.from(id);
-
-		if (!this.table.contains(recordId))
-			throw new Error(
-				`The RecordId(${recordId.toString()}) is not part of the Table(${this.table.toString()})`,
-			);
-
-		return this.query({
-			one: true,
-			target: recordId,
-
-			schema: this.options.schema
-				? convertSchemaUndefinable(this.options.schema)
-				: undefined,
-		});
-	}
-
-	create(record: PartialOnly<TRecord, "id">): Query<TRecord> {
-		if (record.id) {
-			return q
-				.createOnly(record.id)
-				.content(record)
-				.toQuery()
-				.withSchema(this.options.schema);
-		} else {
-			return q
-				.create(this.table)
-				.content(record)
-				.toQuery()
-				.withSchema(this.options.schema);
-		}
-	}
-
-	createAll(
-		records: PartialOnly<TRecord, "id">[],
-	): QueryList<Query<TRecord>[]> {
-		return new QueryList(
-			records.map((record) => this.create(record)),
-			{ connection: this.options.connection },
-		);
-	}
-
-	update(record: TRecord): Query<TRecord> {
-		return q
-			.updateOnly(record.id)
-			.content(record)
+	findById(
+		id: RecordIdLike<InferTableFromSchema<TSchema>>,
+	): Query<InferResult<TSchema> | undefined> {
+		return this.q
+			.select()
+			.fromOnly(id)
 			.toQuery()
-			.withSchema(this.options.schema);
+			.withSchema(withUndefinedSchema(this.schema?.result)) as Query<
+			InferResult<TSchema> | undefined
+		>;
 	}
 
-	updateAll(records: TRecord[]): QueryList<Query<TRecord>[]> {
-		return new QueryList(
-			records.map((record) => this.update(record)),
-			{ connection: this.options.connection },
-		);
+	create(record: OptionalId<InferInput<TSchema>>): Query<InferResult<TSchema>> {
+		return this.q
+			.createOnly(record.id ? record.id : this.table)
+			.content(record as ContentLike<TSchema>)
+			.toQuery();
+	}
+
+	// TODO nice types
+	// createMany<TRecords extends readonly InferSchemaInput<TSchema>[]>(
+	// 	records: TRecords,
+	// ): QueryList<{
+	// 	readonly [Key in keyof TRecords]: InferResult<TSchema>;
+	// }> {
+	// 	return undefined!;
+	// }
+
+	update(
+		record: RequiredId<InferResult<TSchema>>,
+	): Query<InferResult<TSchema>> {
+		return this.q
+			.updateOnly(record.id)
+			.content(record as ContentLike<TSchema>)
+			.toQuery();
 	}
 
 	updateBy(
-		where: RepositoryWhere<TRecord>,
-		partialRecord: Partial<TRecord>,
-	): Query<TRecord> {
+		where: RepositoryWhere<TSchema>,
+		set: SetLike<TSchema>,
+	): Query<InferResult<TSchema>[]> {
 		return this.q
 			.update(this.table)
-			.set(flatten(partialRecord) as SetLike<TRecord>)
+			.set(set)
 			.where(this.getWhereConditions(where))
-			.toQuery();
+			.toQuery()
+			.withSchema(asArraySchema(this.schema?.result)) as Query<
+			InferResult<TSchema>[]
+		>;
 	}
 
 	updateById(
-		id: RecordIdLike<TTable>,
-		partialRecord: Partial<TRecord>,
-	): Query<TRecord> {
+		id: RecordIdLike<InferTableFromSchema<TSchema>>,
+		set: SetLike<TSchema>,
+	): Query<InferResult<TSchema>> {
+		return this.q.update(id).set(set).toQuery();
+	}
+
+	// TODO same as createMany
+	// updateMany
+
+	upsert(record: RequiredId<InferInput<TSchema>>): Query<InferResult<TSchema>> {
 		return this.q
-			.updateOnly(id)
-			.set(flatten(partialRecord) as SetLike<TRecord>)
+			.upsertOnly(record.id)
+			.content(record as ContentLike<TSchema>)
 			.toQuery();
 	}
 
-	upsert(record: TRecord): Query<TRecord> {
+	upsertBy(
+		where: RepositoryWhere<TSchema>,
+		set: SetLike<TSchema>,
+	): Query<InferResult<TSchema>[]> {
 		return this.q
-			.upsertOnly(record.id)
-			.content(record as ContentLike<TRecord>)
+			.upsert(this.table)
+			.set(set)
+			.where(this.getWhereConditions(where))
 			.toQuery()
-			.withSchema(this.options.schema);
+			.withSchema(asArraySchema(this.schema?.result)) as Query<
+			InferResult<TSchema>[]
+		>;
 	}
 
-	upsertAll(records: TRecord[]): QueryList<Query<TRecord>[]> {
-		return new QueryList(
-			records.map((record) => this.upsert(record)),
-			{ connection: this.options.connection },
-		);
+	// TODO same as createMany
+	// upsertMany<TRecords extends readonly InferSchemaInput<TSchema>[]>(
+
+	delete(
+		record: RequiredId<InferInput<TSchema>>,
+	): Query<InferResult<TSchema> | undefined> {
+		return this.q
+			.deleteOnly(record.id)
+			.toQuery()
+			.withSchema(alwaysTo(undefined));
 	}
 
-	save(record: TRecord): Query<TRecord> {
-		return this.upsert(record);
+	deleteBy(where: RepositoryWhere<TSchema>): Query<undefined> {
+		return this.q
+			.delete(this.table)
+			.where(this.getWhereConditions(where))
+			.toQuery()
+			.withSchema(alwaysTo(undefined));
 	}
 
-	saveAll(records: TRecord[]): QueryList<Query<TRecord>[]> {
-		return new QueryList(
-			records.map((record) => this.save(record)),
-			{ connection: this.options.connection },
-		);
+	deleteById(
+		id: RecordIdLike<InferTableFromSchema<TSchema>>,
+	): Query<undefined> {
+		return this.q.deleteOnly(id).toQuery().withSchema(alwaysTo(undefined));
 	}
 
-	delete(record: TRecord): Query<undefined> {
-		return this.deleteById(record.id);
-	}
+	// deleteMany() {}
 
-	deleteAll(records: TRecord[]): QueryList<Query<undefined>[]> {
-		return new QueryList(
-			records.map((record) => this.delete(record)),
-			{ connection: this.options.connection },
-		);
-	}
-
-	deleteBy(where: RepositoryWhere<TRecord>): Query<undefined> {
-		return (
-			q
-				.delete(this.table)
-				.where(this.getWhereConditions(where))
-				.toQuery()
-				// skip schema validation and always return undefined
-				// because it deletes the record
-				.withSchema(alwaysTo(undefined))
-		);
-	}
-
-	deleteById(id: RecordIdLike<TTable>): Query<undefined> {
-		return (
-			this.q
-				.delete(id)
-				.toQuery()
-				// skip schema validation and always return undefined
-				// because it deletes the record
-				.withSchema(alwaysTo(undefined))
-		);
-	}
-
-	private getWhereConditions<T = TRecord>(
-		where: RepositoryWhere<T>,
-	): WhereCondition<T>[] {
+	private getWhereConditions(
+		where: RepositoryWhere<TSchema>,
+	): WhereCondition<TSchema>[] {
 		if (Array.isArray(where)) {
 			// when a conditions array is passed, use it as is
-			return where as WhereCondition<T>[];
+			return where as WhereCondition<TSchema>[];
 		} else {
 			// otherwise convert the filter object to conditions
-			return convertFilterObjectToConditions(where) as WhereCondition<T>[];
+			return convertFilterObjectToConditions(
+				where,
+			) as WhereCondition<TSchema>[];
 		}
 	}
 
@@ -297,12 +219,12 @@ export class Repository<
 	 * @param options The options to use for the query.
 	 * @returns The query.
 	 */
-	private query<TQuerySchemaOutput = unknown>(
-		options: RepositoryRawQueryOptions<TQuerySchemaOutput>,
-	): Query<TQuerySchemaOutput> {
+	private query<TOutput = InferResult<TSchema>>(
+		options: RepositoryRawQueryOptions<TSchema, TOutput>,
+	): Query<TOutput> {
 		const baseQuery = options.one
-			? q.select().fromOnly(options.target ?? this.table)
-			: q.select().from(options.target ?? this.table);
+			? this.q.select().fromOnly(options.target ?? this.table)
+			: this.q.select().from(options.target ?? this.table);
 
 		const query = baseQuery
 			.where(options.where ? this.getWhereConditions(options.where) : undefined)
@@ -312,12 +234,6 @@ export class Repository<
 			.parallel(options.parallel === true)
 			.tempfiles(options.tempfiles === true);
 
-		return query.toQuery().with({
-			// converts the schema to an array schema because we expect an array of results
-			schema: options.schema,
-
-			// use the connection from the repository
-			connection: this.options.connection,
-		});
+		return query.toQuery().withSchema(options.schema) as Query<TOutput>;
 	}
 }
