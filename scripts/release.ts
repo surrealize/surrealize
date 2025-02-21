@@ -38,8 +38,11 @@ const determineTag = (version: string): string => {
 	return prerelease;
 };
 
-const publishPackage = async (packagePath: string) => {
-	const packageJson = await Bun.file(`${packagePath}/package.json`).json();
+const publishPackage = async () => {
+	const packageJson = await Bun.file(
+		`${import.meta.dirname}/../package.json`,
+	).json();
+
 	const canPublish = await isVersionAvailable(
 		packageJson.name,
 		packageJson.version,
@@ -60,7 +63,7 @@ const publishPackage = async (packagePath: string) => {
 
 	const job = Bun.spawnSync({
 		cmd: ["npm", "publish", "--tag", tag, "--access", "public"],
-		cwd: `${packagePath}/dist`,
+		cwd: `${import.meta.dirname}/../dist`,
 		stdout: "inherit",
 		stderr: "inherit",
 		stdin: null,
@@ -69,8 +72,4 @@ const publishPackage = async (packagePath: string) => {
 	if (job.exitCode !== 0) process.exit(job.exitCode);
 };
 
-const packageFolders = await readdir(`${import.meta.dirname}/../packages`);
-
-for (const packageFolder of packageFolders) {
-	await publishPackage(`${import.meta.dirname}/../packages/${packageFolder}`);
-}
+await publishPackage();
