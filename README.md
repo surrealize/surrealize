@@ -10,7 +10,6 @@ It provides you with a Query Builder, a Repository API, an agnostic schema valid
 - 🛡️ Type Safety
 - 📜 Agnostic schema validation
 - ⚙️ TypeScript support
-- 🔗 Native [surrealdb.js](https://github.com/surrealdb/surrealdb.js) integration
 
 ## Installation
 
