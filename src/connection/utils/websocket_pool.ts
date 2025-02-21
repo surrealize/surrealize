@@ -1,7 +1,7 @@
 import { EventEmitter } from "../emitter.ts";
 import { ConnectionStatus } from "../engine.ts";
 import { ConnectionError } from "../error.ts";
-import { parseUint8Array } from "./message.ts";
+import { parseUint8Array } from "./bytes.ts";
 
 export type WebSocketPoolOptions = {
 	url: string | URL;
