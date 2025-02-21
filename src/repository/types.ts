@@ -5,7 +5,7 @@ import type { DurationLike } from "../type/duration.ts";
 import type { RecordSchemaContext } from "../type/record.ts";
 import type { InferTableFromSchema } from "../type/table.ts";
 import type { TargetLike } from "../type/target.ts";
-import type { DeepPartial } from "../utils/object.ts";
+import type { DeepPartial } from "../utils/types.ts";
 
 export type RepositoryWhere<TSchema extends RecordSchemaContext> =
 	InferResult<TSchema> extends Record<string, unknown>

@@ -1,5 +1,5 @@
 import type { SchemaContext } from "../schema/context.ts";
-import type { PartialOnly, RequiredOnly } from "../utils/object.ts";
+import type { PartialOnly, RequiredOnly } from "../utils/types.ts";
 import type { RecordId } from "./recordid.ts";
 
 export type OptionalId<TRecord extends Record<string, unknown>> = PartialOnly<
