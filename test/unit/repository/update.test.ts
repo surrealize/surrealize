@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { RecordId, Repository, Table, neq, surql } from "surrealize";
+
+import { RecordId, Repository, Table, neq, surql } from "../../../src/index.ts";
 
 const table = Table.from("user");
 const repo = new Repository(table);
@@ -20,10 +21,14 @@ describe("Repository update methods", () => {
 		expect(
 			repo.updateBy(
 				{ name: { first: "Alice" } },
-				{ time: { updatedAt: new Date("2023-01-01") }, admin: true },
+				{
+					time: { updatedAt: new Date("2023-01-01") },
+					admin: true,
+					"nested.set": "yes",
+				},
 			).template,
 		).toEqual(
-			surql`UPDATE ${table} SET time.updatedAt = ${new Date("2023-01-01")}, admin = ${true} WHERE (name.first == ${"Alice"})`
+			surql`UPDATE ${table} SET time = ${{ updatedAt: new Date("2023-01-01") }}, admin = ${true}, nested.set = ${"yes"} WHERE (name.first == ${"Alice"})`
 				.template,
 		);
 		expect(
@@ -31,7 +36,7 @@ describe("Repository update methods", () => {
 				friends: ["Alice", "Bob"],
 			}).template,
 		).toEqual(
-			surql`UPDATE ${table} SET friends.0 = ${"Alice"}, friends.1 = ${"Bob"} WHERE (name.first != ${"Alice"} && name.last != ${"Smith"})`
+			surql`UPDATE ${table} SET friends = ${["Alice", "Bob"]} WHERE (name.first != ${"Alice"} && name.last != ${"Smith"})`
 				.template,
 		);
 	});
@@ -39,6 +44,14 @@ describe("Repository update methods", () => {
 	test("updateById", () => {
 		expect(
 			repo.updateById(RecordId.from("user:bob"), { name: { first: "Bob" } })
+				.template,
+		).toEqual(
+			surql`UPDATE ONLY ${RecordId.from("user:bob")} SET name = ${{ first: "Bob" }}`
+				.template,
+		);
+
+		expect(
+			repo.updateById(RecordId.from("user:bob"), { "name.first": "Bob" })
 				.template,
 		).toEqual(
 			surql`UPDATE ONLY ${RecordId.from("user:bob")} SET name.first = ${"Bob"}`

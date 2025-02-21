@@ -18,6 +18,10 @@ describe("Repository delete methods", () => {
 			surql`DELETE ${table} WHERE (name == ${"Bob"})`.template,
 		);
 
+		expect(repo.deleteBy({ "name.first": "Alice" }).template).toEqual(
+			surql`DELETE ${table} WHERE (name.first == ${"Alice"})`.template,
+		);
+
 		expect(repo.deleteBy({ name: { first: "Alice" } }).template).toEqual(
 			surql`DELETE ${table} WHERE (name.first == ${"Alice"})`.template,
 		);

@@ -12,3 +12,7 @@ export const insertDemoData = async (surrealize: Surrealize) => {
 
 	expect(result).toMatchSnapshot();
 };
+
+export const cleanupDemoData = async (surrealize: Surrealize) => {
+	await surrealize.executeAll([q.delete("user"), q.delete("test")]);
+};

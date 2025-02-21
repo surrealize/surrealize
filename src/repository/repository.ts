@@ -144,7 +144,7 @@ export class Repository<
 		id: RecordIdLike<InferTableFromSchema<TSchema>>,
 		set: SetLike<TSchema>,
 	): Query<InferResult<TSchema>> {
-		return this.q.update(id).set(set).toQuery();
+		return this.q.updateOnly(id).set(set).toQuery();
 	}
 
 	// TODO same as createMany
@@ -177,10 +177,7 @@ export class Repository<
 	delete(
 		record: RequiredId<InferInput<TSchema>>,
 	): Query<InferResult<TSchema> | undefined> {
-		return this.q
-			.deleteOnly(record.id)
-			.toQuery()
-			.withSchema(alwaysTo(undefined));
+		return this.q.delete(record.id).toQuery().withSchema(alwaysTo(undefined));
 	}
 
 	deleteBy(where: RepositoryWhere<TSchema>): Query<undefined> {
@@ -194,7 +191,7 @@ export class Repository<
 	deleteById(
 		id: RecordIdLike<InferTableFromSchema<TSchema>>,
 	): Query<undefined> {
-		return this.q.deleteOnly(id).toQuery().withSchema(alwaysTo(undefined));
+		return this.q.delete(id).toQuery().withSchema(alwaysTo(undefined));
 	}
 
 	// deleteMany() {}

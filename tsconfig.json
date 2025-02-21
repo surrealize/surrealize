@@ -16,6 +16,5 @@
 		"paths": {
 			"surrealize": ["./src/index.ts"]
 		}
-	},
-	"include": ["src", "test", "build.ts"]
+	}
 }

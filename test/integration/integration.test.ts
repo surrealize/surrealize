@@ -1,24 +1,24 @@
-import { beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { Surrealize, surql } from "surrealize";
+import { afterEach, beforeAll, describe, expect, test } from "bun:test";
+import { Surrealize, WebSocketEngine, surql } from "surrealize";
 
 import { testSelectOnly, testSelectWhere } from "./jobs/select.ts";
 import { testVersion } from "./jobs/version.ts";
+import { cleanupDemoData } from "./utils.ts";
 
-const surrealize: Surrealize = new Surrealize({
-	url: new URL("ws://localhost:8000"),
-
-	namespace: "test",
-	database: "test",
-
-	timeout: 5000,
-});
+const surrealize: Surrealize = new Surrealize(
+	new WebSocketEngine("ws://localhost:8000"),
+	{
+		namespace: "test",
+		database: "test",
+	},
+);
 
 beforeAll(async () => {
 	await surrealize.connect();
 });
 
-beforeEach(async () => {
-	await surrealize.execute(surql`REMOVE DATABASE IF EXISTS test`);
+afterEach(async () => {
+	await cleanupDemoData(surrealize);
 });
 
 describe("Integration", () => {
