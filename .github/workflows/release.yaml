@@ -1,11 +1,16 @@
+name: Release (canary)
+
 on:
-  push:
+  workflow_run:
+    workflows: ["Run Tests"]
     branches:
       - main
+    types:
+      - completed
 
 jobs:
   canary:
-    name: Release
+    name: Build & Release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,8 +18,6 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
-      - run: bun run check
-      - run: bun test
       - run: bun run build
       - name: Setup npm
         env:

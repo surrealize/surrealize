@@ -1,17 +1,22 @@
+name: Run Tests
+
 on:
   push:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
 
 jobs:
-  push:
-    name: Pull request
+  build:
+    name: Build & Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      - uses: surrealdb/setup-surreal@v2
+        with:
+          surrealdb_auth: false
       - run: bun install --frozen-lockfile
       - run: bun run check
       - run: bun test
