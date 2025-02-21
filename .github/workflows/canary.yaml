@@ -4,7 +4,8 @@ on:
       - main
 
 jobs:
-  release:
+  canary:
+    name: Release (canary)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,10 +15,8 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run check
       - run: bun test
-      - run: bunx changeset version --snapshot canary
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: bun run build
+      - run: bun run canary
       - name: Setup npm
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

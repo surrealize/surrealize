@@ -1,10 +1,11 @@
 {
 	"name": "surrealize",
-	"version": "0.1.0-alpha.11",
+	"version": "0.1.0-alpha.12",
 	"description": "Surrealize is a query builder and ORM for SurrealDB.",
 	"type": "module",
 	"scripts": {
 		"build": "bun run ./scripts/build.ts",
+		"canary": "bun run ./scripts/canary.ts",
 		"release": "bun run ./scripts/release.ts",
 		"test": "bun test",
 		"check": "bunx prettier --check .",
@@ -19,6 +20,7 @@
 		"@trivago/prettier-plugin-sort-imports": "^5.2.2",
 		"@types/bun": "^1.2.2",
 		"arktype": "^2.0.4",
+		"dayjs": "^1.11.13",
 		"prettier": "^3.5.1",
 		"tsup": "^8.3.6",
 		"typescript": "^5.7.3"

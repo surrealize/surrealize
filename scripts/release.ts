@@ -1,5 +1,4 @@
 import { parse } from "@std/semver";
-import { readdir } from "node:fs/promises";
 
 const NPM_REGISTRY_URL = process.env.NPM_REGISTRY_URL;
 const NPM_TOKEN = process.env.NPM_TOKEN;
@@ -30,9 +29,6 @@ const determineTag = (version: string): string => {
 
 	// if the first prerelease tag is not a string, throw an error
 	if (typeof prerelease !== "string") throw new Error("Invalid prerelease");
-
-	// if the version is a canary, return "canary"
-	if (prerelease.startsWith("canary-")) return "canary";
 
 	// else return the prerelease tag
 	return prerelease;

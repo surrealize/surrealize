@@ -1,9 +1,11 @@
 on:
+  push:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
 
 jobs:
-  release:
+  push:
+    name: Pull request
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,4 +16,3 @@ jobs:
       - run: bun run check
       - run: bun test
       - run: bun run build
-      - run: bunx changeset status --since=main
