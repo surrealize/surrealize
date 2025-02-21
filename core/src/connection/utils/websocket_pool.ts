@@ -1,16 +1,17 @@
 import { EventEmitter } from "../emitter.ts";
 import { ConnectionStatus } from "../engine.ts";
+import { ConnectionError } from "../error.ts";
 import { parseUint8Array } from "./message.ts";
 
 export type WebSocketPoolOptions = {
 	url: string | URL;
 	size: number;
-	protocols?: string | string[];
+	protocols: string | string[];
 
-	readyTimeout?: number;
-	reconnectTimeout?: number;
+	readyTimeout: number;
+	reconnectTimeout: number;
 
-	setupConnection?: (connection: WebSocketConnection) => Promise<void> | void;
+	setupConnection: (connection: WebSocketConnection) => Promise<void> | void;
 };
 
 export type WebSocketPoolEvents = {
@@ -59,12 +60,10 @@ export class WebSocketPool extends EventEmitter<WebSocketPoolEvents> {
 				resolve();
 			});
 
-			const timeout = this.#options.readyTimeout
-				? setTimeout(() => {
-						unsubscribe();
-						reject(new Error("Connection timeout"));
-					}, this.#options.readyTimeout ?? 10_000)
-				: undefined;
+			const timeout = setTimeout(() => {
+				unsubscribe();
+				reject(new ConnectionError("Connection timed out"));
+			}, this.#options.readyTimeout);
 		});
 	}
 
@@ -73,7 +72,23 @@ export class WebSocketPool extends EventEmitter<WebSocketPoolEvents> {
 		this.#connected = true;
 
 		this.emit("connecting");
-		this.#fillPool();
+
+		// cleanup pool
+		this.#pool.forEach((connection) => {
+			connection.socket.close();
+			this.#pool.delete(connection.id);
+		});
+
+		for (let i = 0; i < this.#options.size; i++) {
+			this.#createConnection(i).catch((error) =>
+				this.emit(
+					"error",
+					error instanceof Error
+						? error
+						: new Error("Unknown error", { cause: error }),
+				),
+			);
+		}
 	}
 
 	disconnect() {
@@ -103,29 +118,13 @@ export class WebSocketPool extends EventEmitter<WebSocketPoolEvents> {
 		return this.#pool.has(id);
 	}
 
-	#fillPool(): void {
-		if (!this.#connected) return;
-
-		const missingConnections = this.#options.size - this.#pool.size;
-
-		for (let i = 0; i < missingConnections; i++) {
-			this.#createConnection(i).catch((error) =>
-				this.emit(
-					"error",
-					error instanceof Error
-						? error
-						: new Error("Unknown error", { cause: error }),
-				),
-			);
-		}
-	}
-
 	#getNextConnection(): WebSocketConnection | undefined {
 		while (this.#pool.size > 0) {
 			this.#lastId += 1;
-			if (this.#lastId > this.#pool.size) this.#lastId = 0;
+			if (this.#lastId > this.#options.size) this.#lastId = 0;
 
 			const connection = this.#pool.get(this.#lastId);
+
 			if (!connection) continue;
 			return connection;
 		}
@@ -160,7 +159,7 @@ export class WebSocketPool extends EventEmitter<WebSocketPoolEvents> {
 		);
 
 		await connection.waitNext("connected");
-		await this.#options.setupConnection?.(connection);
+		await this.#options.setupConnection(connection);
 
 		this.#pool.set(connection.id, connection);
 		this.emit("connection:connected", connection);
@@ -175,7 +174,7 @@ export class WebSocketPool extends EventEmitter<WebSocketPoolEvents> {
 			// start reconnecting timeout
 			setTimeout(
 				() => this.#createConnection(connection.id),
-				this.#options.reconnectTimeout ?? 1_000,
+				this.#options.reconnectTimeout,
 			);
 
 			// if pool is empty, set status to disconnected
@@ -186,7 +185,7 @@ export class WebSocketPool extends EventEmitter<WebSocketPoolEvents> {
 		this.on("connection:connected", () => {
 			if (!this.#connected) return;
 
-			// if pool is exactly one, set status to connected
+			// if status is not connected, emit connected event
 			if (this.#status !== ConnectionStatus.CONNECTED) this.emit("connected");
 		});
 
@@ -202,6 +201,7 @@ export class WebSocketPool extends EventEmitter<WebSocketPoolEvents> {
 }
 
 export class WebSocketConnection extends EventEmitter<{
+	connecting: [];
 	connected: [];
 	disconnected: [{ reason: string; wasClean: boolean }];
 	error: [Error];
@@ -242,5 +242,7 @@ export class WebSocketConnection extends EventEmitter<{
 				this.emit("message", message),
 			),
 		);
+
+		this.emit("connecting");
 	}
 }

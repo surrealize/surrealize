@@ -1,3 +1,8 @@
+export {
+	WebSocketEngine,
+	type WebSocketEngineOptions,
+} from "./connection/engines/websocket.ts";
+
 export { createDefaultBuilder, q } from "./statements.ts";
 export { Surrealize, type SurrealizeOptions } from "./surrealize.ts";
 

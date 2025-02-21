@@ -1,10 +1,5 @@
 import type { EventEmitter } from "./connection/emitter.ts";
-import {
-	AbstractEngine,
-	type EmitterEvents,
-	type EngineInitializer,
-} from "./connection/engine.ts";
-import { WebSocketEngine } from "./connection/engines/ws.ts";
+import { AbstractEngine, type EmitterEvents } from "./connection/engine.ts";
 import { DatabaseError, QueryError } from "./connection/error.ts";
 import type { RpcRequest, RpcResponse } from "./connection/rpc.ts";
 import type { Auth } from "./connection/types.ts";
@@ -24,8 +19,6 @@ import { RecordId } from "./type/recordid.ts";
 import { type TargetLike, resolveTarget } from "./type/target.ts";
 
 export type SurrealizeOptions = {
-	url: URL | string;
-
 	namespace?: string;
 	database?: string;
 	auth?: Auth;
@@ -36,62 +29,37 @@ export type SurrealizeOptions = {
 	 * This will make the Surrealize instance the default instance for all queries.
 	 */
 	default?: boolean;
-
-	/**
-	 * A collection of engines which are available to connect to.
-	 *
-	 * Defaults to the following engines:
-	 * - `ws`: WebSocket
-	 * - `wss`: WebSocket Secure
-	 */
-	engines?: Record<string, EngineInitializer>;
-
-	/**
-	 * The timeout in milliseconds for the connection.
-	 */
-	timeout?: number;
 };
 
 export class Surrealize {
 	static default: Surrealize | undefined = undefined;
 
-	readonly #engine: AbstractEngine;
+	readonly engine: AbstractEngine;
+	readonly options: SurrealizeOptions;
 	readonly emitter: EventEmitter<EmitterEvents>;
 
-	constructor(options: SurrealizeOptions) {
-		const engines: Record<string, EngineInitializer> = options.engines ?? {
-			ws: (ctx) => new WebSocketEngine(ctx),
-			wss: (ctx) => new WebSocketEngine(ctx),
-		};
-		const url = options.url instanceof URL ? options.url : new URL(options.url);
-
-		const protocol = url.protocol.replace(":", "");
-		const engine = engines[protocol];
-
-		if (!engine) throw new Error(`Unsupported protocol ${protocol}`);
-
-		this.#engine = engine({
-			url,
-			namespace: options.namespace,
-			database: options.database,
-			auth: options.auth,
-			timeout: options.timeout,
-		});
-		this.emitter = this.#engine.emitter;
+	constructor(engine: AbstractEngine, options: SurrealizeOptions = {}) {
+		this.engine = engine;
+		this.options = options;
+		this.emitter = this.engine.emitter;
 
 		if (options.default) Surrealize.default = this;
 	}
 
 	async connect(): Promise<void> {
-		return this.#engine.connect();
+		return this.engine.connect({
+			namespace: this.options.namespace,
+			database: this.options.database,
+			auth: this.options.auth,
+		});
 	}
 
 	async disconnect(): Promise<void> {
-		return this.#engine.disconnect();
+		return this.engine.disconnect();
 	}
 
 	async version(): Promise<string> {
-		return this.#engine.version();
+		return this.engine.version();
 	}
 
 	async execute<TOutput = unknown>(
@@ -153,7 +121,7 @@ export class Surrealize {
 	}
 
 	async rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>> {
-		return this.#engine.rpc(request);
+		return this.engine.rpc(request);
 	}
 
 	async query<TResult extends unknown[]>(

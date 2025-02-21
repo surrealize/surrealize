@@ -3,7 +3,7 @@ import {
 	ConnectionStatus,
 	type EngineContext,
 } from "../engine.ts";
-import { DatabaseError } from "../error.ts";
+import { ConnectionError, DatabaseError } from "../error.ts";
 import type { RpcRequest, RpcResponse, WithId } from "../rpc.ts";
 import { Incrementor } from "../utils/incrementor.ts";
 import { WebSocketConnection, WebSocketPool } from "../utils/websocket_pool.ts";
@@ -14,23 +14,31 @@ type WebSocketEngineConnection = {
 	token?: string;
 };
 
+export type WebSocketEngineOptions = {
+	poolSize?: number;
+	readyTimeout?: number;
+	reconnectTimeout?: number;
+};
+
 export class WebSocketEngine extends AbstractEngine {
 	#requestId: Incrementor = new Incrementor();
 	#pool: WebSocketPool;
 	#connection: WebSocketEngineConnection = {};
-	#context: EngineContext;
 
-	constructor(context: EngineContext) {
+	#context: EngineContext | undefined;
+
+	constructor(url: URL | string, options: WebSocketEngineOptions = {}) {
 		super();
-		this.#context = context;
 
 		this.#pool = new WebSocketPool({
-			url: this.#getUrl(),
-			protocols: "cbor",
-			size: 1,
-			setupConnection: (connection) => this.#setupConnection(connection),
+			url: this.#parseUrl(url),
 
-			readyTimeout: this.#context.timeout,
+			protocols: "cbor",
+			size: options.poolSize ?? 2,
+			readyTimeout: options.readyTimeout ?? 5000,
+			reconnectTimeout: options.reconnectTimeout ?? 1000,
+
+			setupConnection: (connection) => this.#setupConnection(connection),
 		});
 
 		this.#registerEvents();
@@ -44,7 +52,8 @@ export class WebSocketEngine extends AbstractEngine {
 		return this.#pool.ready;
 	}
 
-	async connect(): Promise<void> {
+	async connect(context: EngineContext): Promise<void> {
+		this.#context = context;
 		this.#pool.connect();
 		return this.#pool.ready;
 	}
@@ -104,6 +113,9 @@ export class WebSocketEngine extends AbstractEngine {
 	}
 
 	async #setupConnection(connection: WebSocketConnection): Promise<void> {
+		if (!this.#context)
+			throw new Error("Cannot setup connection without context");
+
 		// if namespace or database is set, use it
 		if (this.#context.namespace || this.#context.database) {
 			const response = await this.#directRpc(
@@ -207,7 +219,12 @@ export class WebSocketEngine extends AbstractEngine {
 	#registerEvents() {
 		this.#pool.on("connecting", () => this.emitter.emit("connecting"));
 		this.#pool.on("connected", () => this.emitter.emit("connected"));
-		this.#pool.on("disconnected", () => this.emitter.emit("disconnected"));
+		this.#pool.on("disconnected", ({ reason, wasClean }) =>
+			this.emitter.emit(
+				"disconnected",
+				new ConnectionError(reason, { wasClean }),
+			),
+		);
 		this.#pool.on("error", (error) => this.emitter.emit("error", error));
 
 		this.#pool.on("message", async (message) => {
@@ -232,8 +249,8 @@ export class WebSocketEngine extends AbstractEngine {
 		});
 	}
 
-	#getUrl(): URL {
-		const newUrl = new URL(this.#context.url.toString());
+	#parseUrl(url: URL | string): URL {
+		const newUrl = new URL(url.toString());
 		if (newUrl.pathname.endsWith("/rpc")) return newUrl;
 
 		if (!newUrl.pathname.endsWith("/")) newUrl.pathname += "/";

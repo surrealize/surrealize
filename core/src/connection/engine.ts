@@ -5,17 +5,11 @@ import type { RpcRequest, RpcResponse, WithId } from "./rpc.ts";
 import type { Auth } from "./types.ts";
 
 export type EngineContext = {
-	url: URL;
-
 	namespace?: string;
 	database?: string;
 
 	auth?: Auth;
-
-	timeout?: number;
 };
-
-export type EngineInitializer = (context: EngineContext) => AbstractEngine;
 
 export enum ConnectionStatus {
 	CONNECTING = "CONNECTING",
@@ -29,8 +23,8 @@ export type EmitterEvents = {
 	connecting: [];
 	connected: [];
 	disconnecting: [];
-	disconnected: [];
-	error: [Error];
+	disconnected: [error?: Error];
+	error: [error: Error];
 
 	[Key: `rpc-${string}`]: [WithId<RpcResponse>];
 	[Key: `live-${string}`]: [any];
@@ -52,7 +46,7 @@ export abstract class AbstractEngine {
 		this.decodeCbor = decodeCbor;
 	}
 
-	abstract connect(): Promise<void>;
+	abstract connect(context: EngineContext): Promise<void>;
 	abstract disconnect(): Promise<void>;
 
 	abstract rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>>;
