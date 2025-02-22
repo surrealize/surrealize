@@ -16,4 +16,5 @@ export type Auth =
 
 			username: string;
 			password: string;
-	  };
+	  }
+	| { type: "token"; token: string };

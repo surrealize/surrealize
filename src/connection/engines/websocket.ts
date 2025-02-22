@@ -1,18 +1,13 @@
 import {
 	AbstractEngine,
 	ConnectionStatus,
-	type EngineContext,
+	type EngineInit,
 } from "../engine.ts";
 import { ConnectionError, DatabaseError } from "../error.ts";
 import type { RpcRequest, RpcResponse, WithId } from "../rpc.ts";
 import { Incrementor } from "../utils/incrementor.ts";
+import { handleRpcRequest, handleRpcResponse } from "../utils/rpc.ts";
 import { WebSocketConnection, WebSocketPool } from "../utils/websocket_pool.ts";
-
-type WebSocketEngineConnection = {
-	namespace?: string;
-	database?: string;
-	token?: string;
-};
 
 export type WebSocketEngineOptions = {
 	poolSize?: number;
@@ -23,9 +18,8 @@ export type WebSocketEngineOptions = {
 export class WebSocketEngine extends AbstractEngine {
 	#requestId: Incrementor = new Incrementor();
 	#pool: WebSocketPool;
-	#connection: WebSocketEngineConnection = {};
 
-	#context: EngineContext | undefined;
+	#init: EngineInit | undefined;
 
 	constructor(url: URL | string, options: WebSocketEngineOptions = {}) {
 		super();
@@ -52,8 +46,8 @@ export class WebSocketEngine extends AbstractEngine {
 		return this.#pool.ready;
 	}
 
-	async connect(context: EngineContext): Promise<void> {
-		this.#context = context;
+	async connect(init: EngineInit): Promise<void> {
+		this.#init = init;
 		this.#pool.connect();
 		return this.#pool.ready;
 	}
@@ -66,7 +60,7 @@ export class WebSocketEngine extends AbstractEngine {
 		await this.ready;
 
 		const id = this.#requestId.nextNumber();
-		const responsePromise = this.emitter.waitNext(`rpc-${id}`);
+		const responsePromise = this.waitNext(`rpc-${id}`);
 
 		this.#pool.send(
 			this.encodeCbor({
@@ -78,7 +72,7 @@ export class WebSocketEngine extends AbstractEngine {
 
 		const [response] = await responsePromise;
 
-		this.#handleRequest(request, response);
+		handleRpcRequest(this.state, request, response);
 
 		return response as RpcResponse<TResult>;
 	}
@@ -88,7 +82,7 @@ export class WebSocketEngine extends AbstractEngine {
 		connection: WebSocketConnection,
 	) {
 		const id = this.#requestId.nextNumber();
-		const responsePromise = this.emitter.waitNext(`rpc-${id}`);
+		const responsePromise = this.waitNext(`rpc-${id}`);
 
 		connection.send(
 			this.encodeCbor({
@@ -101,7 +95,7 @@ export class WebSocketEngine extends AbstractEngine {
 		const [response] = await responsePromise;
 		if (response instanceof Error) throw response;
 
-		this.#handleRequest(request, response);
+		handleRpcRequest(this.state, request, response);
 
 		return response as RpcResponse<TResult>;
 	}
@@ -113,15 +107,14 @@ export class WebSocketEngine extends AbstractEngine {
 	}
 
 	async #setupConnection(connection: WebSocketConnection): Promise<void> {
-		if (!this.#context)
-			throw new Error("Cannot setup connection without context");
+		if (!this.#init) throw new Error("Cannot setup connection without context");
 
 		// if namespace or database is set, use it
-		if (this.#context.namespace || this.#context.database) {
+		if (this.#init.namespace || this.#init.database) {
 			const response = await this.#directRpc(
 				{
 					method: "use",
-					params: [this.#context.namespace, this.#context.database],
+					params: [this.#init.namespace, this.#init.database],
 				},
 				connection,
 			);
@@ -130,28 +123,28 @@ export class WebSocketEngine extends AbstractEngine {
 		}
 
 		// if auth is set, authenticate
-		if (this.#context.auth) {
+		if (this.#init.auth) {
 			let payload:
 				| { NS?: string; DB?: string; user?: string; pass?: string }
 				| undefined = undefined;
 
-			const auth = this.#context.auth;
+			const auth = this.#init.auth;
 
 			switch (auth.type) {
 				case "root":
 					payload = { user: auth.username, pass: auth.password };
 					break;
-				case "database":
+				case "namespace":
 					payload = {
 						NS: auth.namespace,
-						DB: auth.database,
 						user: auth.username,
 						pass: auth.password,
 					};
 					break;
-				case "namespace":
+				case "database":
 					payload = {
 						NS: auth.namespace,
+						DB: auth.database,
 						user: auth.username,
 						pass: auth.password,
 					};
@@ -170,62 +163,13 @@ export class WebSocketEngine extends AbstractEngine {
 		return Promise.resolve();
 	}
 
-	#handleRequest(request: RpcRequest, response: RpcResponse): void {
-		if (response.error) return;
-
-		switch (request.method) {
-			case "use": {
-				const [namespace, database] = request.params as [
-					string | null | undefined,
-					string | null | undefined,
-				];
-
-				if (namespace === null) this.#connection.namespace = undefined;
-				if (database === null) this.#connection.database = undefined;
-				if (namespace) this.#connection.namespace = namespace;
-				if (database) this.#connection.database = database;
-				break;
-			}
-
-			case "signin":
-			case "signup": {
-				this.#connection.token = response.result as string;
-				break;
-			}
-
-			case "authenticate": {
-				const [token] = request.params as [string];
-				this.#connection.token = token;
-				break;
-			}
-
-			case "invalidate": {
-				this.#connection.token = undefined;
-				break;
-			}
-		}
-	}
-
-	#handleResponse(response: WithId<RpcResponse> | RpcResponse): void {
-		if ("id" in response) {
-			this.emitter.emit(`rpc-${response.id}`, response);
-		} else if (false /* is live query */) {
-			// TODO live query
-		} else {
-			// TODO handle error
-		}
-	}
-
 	#registerEvents() {
-		this.#pool.on("connecting", () => this.emitter.emit("connecting"));
-		this.#pool.on("connected", () => this.emitter.emit("connected"));
+		this.#pool.on("connecting", () => this.emit("connecting"));
+		this.#pool.on("connected", () => this.emit("connected"));
 		this.#pool.on("disconnected", ({ reason, wasClean }) =>
-			this.emitter.emit(
-				"disconnected",
-				new ConnectionError(reason, { wasClean }),
-			),
+			this.emit("disconnected", new ConnectionError(reason, { wasClean })),
 		);
-		this.#pool.on("error", (error) => this.emitter.emit("error", error));
+		this.#pool.on("error", (error) => this.emit("error", error));
 
 		this.#pool.on("message", async (message) => {
 			try {
@@ -236,7 +180,7 @@ export class WebSocketEngine extends AbstractEngine {
 					decoded !== null &&
 					Object.getPrototypeOf(decoded) === Object.prototype
 				) {
-					this.#handleResponse(decoded as WithId<RpcResponse> | RpcResponse);
+					handleRpcResponse(this, decoded as WithId<RpcResponse> | RpcResponse);
 				} else {
 					throw new Error("Unexpected response");
 				}

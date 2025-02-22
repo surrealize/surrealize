@@ -4,11 +4,18 @@ import { EventEmitter } from "./emitter.ts";
 import type { RpcRequest, RpcResponse, WithId } from "./rpc.ts";
 import type { Auth } from "./types.ts";
 
-export type EngineContext = {
+export type EngineInit = {
 	namespace?: string;
 	database?: string;
 
 	auth?: Auth;
+};
+
+export type EngineState = {
+	namespace?: string;
+	database?: string;
+	token?: string;
+	variables?: Record<string, unknown>;
 };
 
 export enum ConnectionStatus {
@@ -30,23 +37,23 @@ export type EmitterEvents = {
 	[Key: `live-${string}`]: [any];
 };
 
-export abstract class AbstractEngine {
+export abstract class AbstractEngine extends EventEmitter<EmitterEvents> {
 	abstract ready: Promise<void>;
 	abstract status: ConnectionStatus;
 
-	emitter: EventEmitter<EmitterEvents>;
+	state: EngineState = {};
 
 	encodeCbor: CborEncoder;
 	decodeCbor: CborDecoder;
 
 	constructor() {
-		this.emitter = new EventEmitter<EmitterEvents>();
+		super();
 
 		this.encodeCbor = encodeCbor;
 		this.decodeCbor = decodeCbor;
 	}
 
-	abstract connect(context: EngineContext): Promise<void>;
+	abstract connect(init: EngineInit): Promise<void>;
 	abstract disconnect(): Promise<void>;
 
 	abstract rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>>;
