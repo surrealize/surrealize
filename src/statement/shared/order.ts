@@ -5,8 +5,20 @@ import type {
 	UnknownSchemaContext,
 } from "../../schema/context.ts";
 
-export type OrderDirection = "ASC" | "DESC";
-export type OrderMode = "COLLATE" | "NUMERIC";
+const orderDirectionMapping = {
+	asc: "ASC",
+	ascending: "ASC",
+	desc: "DESC",
+	descending: "DESC",
+};
+
+const orderModeMapping = {
+	collate: "COLLATE",
+	numeric: "NUMERIC",
+};
+
+export type OrderDirection = keyof typeof orderDirectionMapping;
+export type OrderMode = keyof typeof orderModeMapping;
 
 export type OrderFieldOptions<TSchema extends SchemaContext> = {
 	field: Field<TSchema>;
@@ -35,7 +47,15 @@ export const buildOrder = <TSchema extends SchemaContext>(
 					typeof field === "string"
 						? tagString(enforceField(field))
 						: tagString(
-								`${enforceField(field.field)}${field.mode ? ` ${field.mode}` : ""}${field.direction ? ` ${field.direction}` : ""}`,
+								`${enforceField(field.field)}${
+									field.mode && orderModeMapping[field.mode]
+										? ` ${orderModeMapping[field.mode]}`
+										: ""
+								}${
+									field.direction && orderDirectionMapping[field.direction]
+										? ` ${orderDirectionMapping[field.direction]}`
+										: ""
+								}`,
 							),
 				),
 				", ",
