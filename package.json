@@ -18,8 +18,8 @@
 	"devDependencies": {
 		"@std/semver": "npm:@jsr/std__semver@^1.0.4",
 		"@trivago/prettier-plugin-sort-imports": "^5.2.2",
-		"@types/bun": "^1.2.2",
-		"arktype": "^2.0.4",
+		"@types/bun": "^1.2.3",
+		"arktype": "^2.1.0",
 		"dayjs": "^1.11.13",
 		"prettier": "^3.5.2",
 		"tsup": "^8.3.6",
