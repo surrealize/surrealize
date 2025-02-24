@@ -1,4 +1,8 @@
 export {
+	HttpEngine,
+	type HttpEngineOptions,
+} from "./connection/engines/http.ts";
+export {
 	WebSocketEngine,
 	type WebSocketEngineOptions,
 } from "./connection/engines/websocket.ts";

@@ -5,6 +5,7 @@ import {
 } from "../engine.ts";
 import { ConnectionError, DatabaseError } from "../error.ts";
 import type { RpcRequest, RpcResponse, WithId } from "../rpc.ts";
+import type { Auth } from "../types.ts";
 import { handleRpcRequest, handleRpcResponse } from "../utils/rpc.ts";
 
 export type HttpEngineOptions = {
@@ -40,23 +41,48 @@ export class HttpEngine extends AbstractEngine {
 			database: init.database,
 		};
 
-		switch (init.auth?.type) {
-			case "root":
-				this.state.token = "TODO"; // TODO
-				break;
-
-			case "namespace":
-				this.state.token = "TODO"; // TODO
-				break;
-
-			case "database":
-				this.state.token = "TODO"; // TODO
-				break;
-			case "token":
-				this.state.token = init.auth.token;
-		}
+		if (init.auth) this.state.token = await this.#signIn(init.auth);
 
 		return this.ready;
+	}
+
+	async #signIn(auth: Auth): Promise<string> {
+		if (auth.type === "token") return auth.token;
+
+		let payload = undefined;
+
+		switch (auth.type) {
+			case "root":
+				payload = {
+					user: auth.username,
+					pass: auth.password,
+				};
+				break;
+			case "namespace":
+				payload = {
+					NS: auth.namespace,
+					user: auth.username,
+					pass: auth.password,
+				};
+				break;
+			case "database":
+				payload = {
+					NS: auth.namespace,
+					DB: auth.database,
+					user: auth.username,
+					pass: auth.password,
+				};
+				break;
+		}
+
+		const response = await this.rpc({
+			method: "signin",
+			params: [payload],
+		});
+
+		if (response.error) throw new DatabaseError(response.error);
+
+		return response.result as string;
 	}
 
 	async disconnect(): Promise<void> {
@@ -70,11 +96,9 @@ export class HttpEngine extends AbstractEngine {
 			method: "POST",
 			headers: this.#createHeaders(),
 			body: this.encodeCbor({
-				// TODO try if this will work but it should
-				id: 0,
 				method: request.method,
 				params: request.params,
-			} satisfies WithId<RpcRequest>),
+			} satisfies RpcRequest),
 		});
 
 		if (!httpResponse.ok)
