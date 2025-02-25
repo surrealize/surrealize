@@ -1,10 +1,10 @@
-name: Release (main)
+name: Release (next)
 
 on:
   workflow_run:
     workflows: ["Run Tests"]
     branches:
-      - main
+      - next
     types:
       - completed
 
@@ -19,6 +19,7 @@ jobs:
           bun-version: latest
       - run: bun install --frozen-lockfile
       - run: bun run build
+      - run: bun run canary -- next
       - name: Setup npm
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
