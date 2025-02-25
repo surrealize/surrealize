@@ -1,18 +1,23 @@
-import {
-	AbstractEngine,
-	ConnectionStatus,
-	type EngineInit,
-} from "../engine.ts";
+import type { CborCodec } from "../cbor/types.ts";
+import "../engine.ts";
+import { AbstractEngine, ConnectionStatus } from "../engine.ts";
 import { ConnectionError, DatabaseError } from "../error.ts";
 import type { RpcRequest, RpcResponse, WithId } from "../rpc.ts";
 import type { Auth } from "../types.ts";
-import { handleRpcRequest, handleRpcResponse } from "../utils/rpc.ts";
+import { Jwt } from "../utils/jwt.ts";
+import { handleRpcResponse } from "../utils/rpc.ts";
 
 export type HttpEngineOptions = {
+	namespace?: string;
+	database?: string;
+	auth?: Auth;
+
 	/**
 	 * Custom headers to send with every request.
 	 */
 	headers?: HeadersInit;
+
+	cbor?: CborCodec;
 };
 
 export class HttpEngine extends AbstractEngine {
@@ -21,81 +26,38 @@ export class HttpEngine extends AbstractEngine {
 	#options: HttpEngineOptions;
 
 	constructor(url: URL | string, options: HttpEngineOptions = {}) {
-		super();
+		super({
+			cbor: options.cbor,
+			namespace: options.namespace,
+			database: options.database,
+			auth: options.auth,
+		});
 
 		this.#options = options;
 		this.url = this.#parseUrl(url);
 	}
 
-	get status(): ConnectionStatus {
+	getStatus(): ConnectionStatus {
 		return ConnectionStatus.CONNECTED;
 	}
 
-	get ready(): Promise<void> {
-		return Promise.resolve();
+	async isReady(): Promise<void> {
+		await this.#checkToken();
 	}
 
-	async connect(init: EngineInit): Promise<void> {
-		this.state = {
-			namespace: init.namespace,
-			database: init.database,
-		};
-
-		if (init.auth) this.state.token = await this.#signIn(init.auth);
-
-		return this.ready;
+	async connect(): Promise<void> {
+		return this.isReady();
 	}
 
-	async #signIn(auth: Auth): Promise<string> {
-		if (auth.type === "token") return auth.token;
-
-		let payload = undefined;
-
-		switch (auth.type) {
-			case "root":
-				payload = {
-					user: auth.username,
-					pass: auth.password,
-				};
-				break;
-			case "namespace":
-				payload = {
-					NS: auth.namespace,
-					user: auth.username,
-					pass: auth.password,
-				};
-				break;
-			case "database":
-				payload = {
-					NS: auth.namespace,
-					DB: auth.database,
-					user: auth.username,
-					pass: auth.password,
-				};
-				break;
-		}
-
-		const response = await this.rpc({
-			method: "signin",
-			params: [payload],
-		});
-
-		if (response.error) throw new DatabaseError(response.error);
-
-		return response.result as string;
-	}
-
-	async disconnect(): Promise<void> {
-		this.state = {};
-	}
+	async disconnect(): Promise<void> {}
 
 	async rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>> {
-		await this.ready;
+		await this.isReady();
 
 		const httpResponse = await fetch(this.url, {
 			method: "POST",
 			headers: this.#createHeaders(),
-			body: this.encodeCbor({
+			body: this.cbor.encode({
 				method: request.method,
 				params: request.params,
 			} satisfies RpcRequest),
@@ -109,7 +71,7 @@ export class HttpEngine extends AbstractEngine {
 
 		const response = await httpResponse
 			.arrayBuffer()
-			.then((buffer) => this.decodeCbor(new Uint8Array(buffer)));
+			.then((buffer) => this.cbor.decode(new Uint8Array(buffer)));
 
 		if (
 			!(
@@ -121,7 +83,6 @@ export class HttpEngine extends AbstractEngine {
 			throw new ConnectionError("Unexpected response", httpResponse);
 
 		handleRpcResponse(this, response as WithId<RpcResponse> | RpcResponse);
-		handleRpcRequest(this.state, request, response as RpcResponse);
 
 		return response as RpcResponse<TResult>;
 	}
@@ -132,13 +93,66 @@ export class HttpEngine extends AbstractEngine {
 		return res.result;
 	}
 
+	async #checkToken(): Promise<void> {
+		const auth = this.options.auth;
+
+		// skip if no auth provided
+		if (!auth) return;
+
+		const jwt = this.state.token ? new Jwt(this.state.token) : undefined;
+
+		// if no token is set, do nothing
+		if (!jwt) return;
+
+		// if token is valid, do nothing
+		if (jwt.isValid()) return;
+
+		if (auth.type === "token") {
+			this.state.token = auth.token;
+			return;
+		}
+
+		let payload: {
+			user: string;
+			pass: string;
+			namespace?: string;
+			database?: string;
+		} = {
+			user: auth.username,
+			pass: auth.password,
+		};
+
+		if ("namespace" in auth) {
+			payload.namespace = auth.namespace;
+
+			if ("database" in auth) {
+				payload.database = auth.database;
+			}
+		}
+
+		const response = await this.rpc<string>({
+			method: "signin",
+			params: [payload],
+		});
+
+		if (response.error) throw new DatabaseError(response.error);
+
+		this.state.token = response.result;
+	}
+
 	#createHeaders(): Headers {
 		const headers = new Headers(this.#options.headers);
 		headers.set("Content-Type", "application/cbor");
 		headers.set("Accept", "application/cbor");
 
-		if (this.state.namespace) headers.set("Surreal-NS", this.state.namespace);
-		if (this.state.database) headers.set("Surreal-DB", this.state.database);
+		if (this.#options.namespace) {
+			headers.set("Surreal-NS", this.#options.namespace);
+
+			if (this.#options.database) {
+				headers.set("Surreal-DB", this.#options.database);
+			}
+		}
+
 		if (this.state.token)
 			headers.set("Authorization", `Bearer ${this.state.token}`);
 

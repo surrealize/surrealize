@@ -20,4 +20,9 @@ export class Jwt {
 		if (isNaN(exp)) throw new Error("Invalid expiration date");
 		return new Date(exp * 1000);
 	}
+
+	isValid(offset: number = 60_000 /* 1 minute */): boolean {
+		const now = new Date(Date.now() + (offset ?? 0));
+		return now < this.exp;
+	}
 }

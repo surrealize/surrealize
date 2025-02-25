@@ -1,7 +1,5 @@
-import type { EventEmitter } from "./connection/emitter.ts";
-import { AbstractEngine, type EmitterEvents } from "./connection/engine.ts";
+import { AbstractEngine } from "./connection/engine.ts";
 import { DatabaseError, QueryError } from "./connection/error.ts";
-import type { RpcRequest, RpcResponse } from "./connection/rpc.ts";
 import type { Auth } from "./connection/types.ts";
 import { surql } from "./query/query.ts";
 import type {
@@ -36,22 +34,16 @@ export class Surrealize {
 
 	readonly engine: AbstractEngine;
 	readonly options: SurrealizeOptions;
-	readonly emitter: EventEmitter<EmitterEvents>;
 
 	constructor(engine: AbstractEngine, options: SurrealizeOptions = {}) {
 		this.engine = engine;
 		this.options = options;
-		this.emitter = this.engine.emitter;
 
 		if (options.default) Surrealize.default = this;
 	}
 
 	async connect(): Promise<void> {
-		return this.engine.connect({
-			namespace: this.options.namespace,
-			database: this.options.database,
-			auth: this.options.auth,
-		});
+		return this.engine.connect();
 	}
 
 	async disconnect(): Promise<void> {
@@ -120,15 +112,11 @@ export class Surrealize {
 		return this.execute(query.withSchema(schema));
 	}
 
-	async rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>> {
-		return this.engine.rpc(request);
-	}
-
 	async query<TResult extends unknown[]>(
 		query: string,
 		bindings?: Record<string, unknown>,
 	): Promise<TResult> {
-		const response = await this.rpc<
+		const response = await this.engine.rpc<
 			Array<{ result: unknown; status: "OK" | "ERR"; time: string }>
 		>({
 			method: "query",

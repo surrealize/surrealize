@@ -1,21 +1,20 @@
-import { decodeCbor, encodeCbor } from "./cbor/cbor.ts";
-import type { CborDecoder, CborEncoder } from "./cbor/types.ts";
+import { DefaultCborCodec } from "./cbor/cbor.ts";
+import type { CborCodec } from "./cbor/types.ts";
 import { EventEmitter } from "./emitter.ts";
 import type { RpcRequest, RpcResponse, WithId } from "./rpc.ts";
 import type { Auth } from "./types.ts";
 
-export type EngineInit = {
+export type EngineOptions = {
 	namespace?: string;
 	database?: string;
-
 	auth?: Auth;
+
+	cbor?: CborCodec;
 };
 
-export type EngineState = {
-	namespace?: string;
-	database?: string;
+export type ConnectionState = {
 	token?: string;
-	variables?: Record<string, unknown>;
+	// variables?: Record<string, unknown>;
 };
 
 export enum ConnectionStatus {
@@ -38,22 +37,21 @@ export type EmitterEvents = {
 };
 
 export abstract class AbstractEngine extends EventEmitter<EmitterEvents> {
-	abstract ready: Promise<void>;
-	abstract status: ConnectionStatus;
+	cbor: CborCodec;
+	options: EngineOptions;
+	state: ConnectionState;
 
-	state: EngineState = {};
-
-	encodeCbor: CborEncoder;
-	decodeCbor: CborDecoder;
-
-	constructor() {
+	constructor(options?: EngineOptions) {
 		super();
-
-		this.encodeCbor = encodeCbor;
-		this.decodeCbor = decodeCbor;
+		this.options = options ?? {};
+		this.cbor = options?.cbor ?? new DefaultCborCodec();
+		this.state = {};
 	}
 
-	abstract connect(init: EngineInit): Promise<void>;
+	abstract isReady(): Promise<void>;
+	abstract getStatus(): ConnectionStatus;
+
+	abstract connect(): Promise<void>;
 	abstract disconnect(): Promise<void>;
 
 	abstract rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>>;
