@@ -1,17 +1,19 @@
 name: Release (canary)
 
 on:
-  workflow_run:
-    workflows: ["Run Tests"]
+  push:
     branches:
       - main
-    types:
-      - completed
 
 jobs:
-  canary:
-    name: Build & Release
+  test:
+    name: Test & Build
+    uses: ./.github/workflows/test.yaml
+
+  relrease_canary:
+    name: Release (canary)
     runs-on: ubuntu-latest
+    needs: [test]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2

@@ -1,17 +1,19 @@
 name: Release (next)
 
 on:
-  workflow_run:
-    workflows: ["Run Tests"]
+  push:
     branches:
       - next
-    types:
-      - completed
 
 jobs:
-  canary:
-    name: Build & Release
+  test:
+    name: Test & Build
+    uses: ./.github/workflows/test.yaml
+
+  release_next:
+    name: Release (next)
     runs-on: ubuntu-latest
+    needs: [test]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2

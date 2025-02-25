@@ -36,7 +36,7 @@ const determineTag = (version: string): string => {
 
 const publishPackage = async () => {
 	const packageJson = await Bun.file(
-		`${import.meta.dirname}/../package.json`,
+		`${import.meta.dirname}/../dist/package.json`,
 	).json();
 
 	const canPublish = await isVersionAvailable(
