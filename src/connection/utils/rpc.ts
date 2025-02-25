@@ -1,5 +1,5 @@
 import type { AbstractEngine } from "../engine.ts";
-import type { RpcResponse, WithId } from "../rpc.ts";
+import type { RpcResponse, WithId } from "../types.ts";
 
 export const handleRpcResponse = (
 	engine: AbstractEngine,

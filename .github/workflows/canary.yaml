@@ -8,7 +8,7 @@ on:
 jobs:
   test:
     name: Test & Build
-    uses: ./.github/workflows/test.yaml
+    uses: .github/workflows/test.yaml
 
   relrease_canary:
     name: Release (canary)

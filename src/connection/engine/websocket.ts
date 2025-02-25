@@ -1,8 +1,7 @@
 import type { CborCodec } from "../cbor/cbor.ts";
 import { AbstractEngine, ConnectionStatus } from "../engine.ts";
 import { ConnectionError, DatabaseError } from "../error.ts";
-import type { RpcRequest, RpcResponse, WithId } from "../rpc.ts";
-import type { Auth } from "../types.ts";
+import type { Auth, RpcRequest, RpcResponse, WithId } from "../types.ts";
 import { Incrementor } from "../utils/incrementor.ts";
 import { Jwt } from "../utils/jwt.ts";
 import { handleRpcResponse } from "../utils/rpc.ts";

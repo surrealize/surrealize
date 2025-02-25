@@ -7,6 +7,32 @@ export {
 	type WebSocketEngineOptions,
 } from "./connection/engine/websocket.ts";
 
+export {
+	EventEmitter,
+	type EventListener,
+	type EventUnsubscriber,
+} from "./connection/emitter.ts";
+export {
+	AbstractEngine,
+	type ConnectionState,
+	ConnectionStatus,
+	type EmitterEvents,
+	type EngineOptions,
+} from "./connection/engine.ts";
+export {
+	ConnectionError,
+	DatabaseError,
+	QueryError,
+} from "./connection/error.ts";
+export type {
+	Auth,
+	RpcRequest,
+	RpcResponse,
+	RpcResponseError,
+	RpcResponseOk,
+	WithId,
+} from "./connection/types.ts";
+
 export { createDefaultBuilder, q } from "./statements.ts";
 export { Surrealize, type SurrealizeOptions } from "./surrealize.ts";
 

@@ -1,4 +1,4 @@
-import type { RpcResponseError } from "./rpc.ts";
+import type { RpcResponseError } from "./types.ts";
 
 export class DatabaseError extends Error {
 	code: number;
