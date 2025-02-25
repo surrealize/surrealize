@@ -1,4 +1,4 @@
-import type { CborCodec } from "../cbor/types.ts";
+import type { CborCodec } from "../cbor/cbor.ts";
 import { AbstractEngine, ConnectionStatus } from "../engine.ts";
 import { ConnectionError, DatabaseError } from "../error.ts";
 import type { RpcRequest, RpcResponse, WithId } from "../rpc.ts";
@@ -6,7 +6,6 @@ import type { Auth } from "../types.ts";
 import { Incrementor } from "../utils/incrementor.ts";
 import { Jwt } from "../utils/jwt.ts";
 import { handleRpcResponse } from "../utils/rpc.ts";
-// TODO
 import { WebSocketConnection, WebSocketPool } from "../utils/websocket_pool.ts";
 
 export type WebSocketEngineOptions = {
@@ -37,7 +36,7 @@ export class WebSocketEngine extends AbstractEngine {
 			url: this.#parseUrl(url),
 
 			protocols: "cbor",
-			size: options.poolSize ?? 2,
+			size: options.poolSize ?? 1,
 			readyTimeout: options.readyTimeout ?? 5000,
 			reconnectTimeout: options.reconnectTimeout ?? 1000,
 
@@ -53,7 +52,6 @@ export class WebSocketEngine extends AbstractEngine {
 
 	async isReady(): Promise<void> {
 		await this.#pool.ready;
-		await this.#checkToken();
 	}
 
 	async connect(): Promise<void> {
@@ -77,6 +75,9 @@ export class WebSocketEngine extends AbstractEngine {
 				method: request.method,
 				params: request.params,
 			} satisfies WithId<RpcRequest>),
+			undefined,
+			// pre-hook: check for token state before sending
+			(connection) => this.#checkToken(connection),
 		);
 
 		const [response] = await responsePromise;
@@ -84,10 +85,7 @@ export class WebSocketEngine extends AbstractEngine {
 		return response as RpcResponse<TResult>;
 	}
 
-	async #directRpc<TResult>(
-		request: RpcRequest,
-		connection: WebSocketConnection,
-	) {
+	async #rawRpc<TResult>(request: RpcRequest, connection: WebSocketConnection) {
 		const id = this.#requestId.nextNumber();
 		const responsePromise = this.waitNext(`rpc-${id}`);
 
@@ -114,7 +112,7 @@ export class WebSocketEngine extends AbstractEngine {
 	async #setupConnection(connection: WebSocketConnection): Promise<void> {
 		// if namespace or database is set, use it
 		if (this.options.namespace || this.options.database) {
-			const response = await this.#directRpc(
+			const response = await this.#rawRpc(
 				{
 					method: "use",
 					params: [this.options.namespace, this.options.database],
@@ -127,7 +125,7 @@ export class WebSocketEngine extends AbstractEngine {
 
 		// authenticate if token is provided
 		if (this.state.token) {
-			const response = await this.#directRpc(
+			const response = await this.#rawRpc(
 				{ method: "authenticate", params: [this.state.token] },
 				connection,
 			);
@@ -137,22 +135,22 @@ export class WebSocketEngine extends AbstractEngine {
 		return;
 	}
 
-	async #checkToken(connection?: WebSocketConnection): Promise<void> {
+	// move authentication stuff to the peer
+	async #checkToken(connection: WebSocketConnection): Promise<void> {
 		const auth = this.options.auth;
 
 		// skip if no auth provided
 		if (!auth) return;
 
-		const jwt = this.state.token ? new Jwt(this.state.token) : undefined;
-
-		// if no token is set, do nothing
-		if (!jwt) return;
+		const jwt = connection.state.token
+			? new Jwt(connection.state.token)
+			: undefined;
 
 		// if token is valid, do nothing
-		if (jwt.isValid()) return;
+		if (jwt?.isValid()) return;
 
 		if (auth.type === "token") {
-			this.state.token = auth.token;
+			connection.state.token = auth.token;
 			return;
 		}
 
@@ -176,13 +174,11 @@ export class WebSocketEngine extends AbstractEngine {
 
 		const request: RpcRequest = { method: "signin", params: [payload] };
 
-		const response = await (connection
-			? this.#directRpc<string>(request, connection)
-			: this.rpc<string>(request));
+		const response = await this.#rawRpc<string>(request, connection);
 
 		if (response.error) throw new DatabaseError(response.error);
 
-		this.state.token = response.result;
+		connection.state.token = response.result;
 	}
 
 	#registerEvents() {

@@ -1,5 +1,4 @@
-import type { CborCodec } from "../cbor/types.ts";
-import "../engine.ts";
+import type { CborCodec } from "../cbor/cbor.ts";
 import { AbstractEngine, ConnectionStatus } from "../engine.ts";
 import { ConnectionError, DatabaseError } from "../error.ts";
 import type { RpcRequest, RpcResponse, WithId } from "../rpc.ts";
@@ -54,6 +53,14 @@ export class HttpEngine extends AbstractEngine {
 	async rpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>> {
 		await this.isReady();
 
+		const response = await this.#rawRpc(request);
+
+		handleRpcResponse(this, response as WithId<RpcResponse> | RpcResponse);
+
+		return response as RpcResponse<TResult>;
+	}
+
+	async #rawRpc<TResult>(request: RpcRequest): Promise<RpcResponse<TResult>> {
 		const httpResponse = await fetch(this.url, {
 			method: "POST",
 			headers: this.#createHeaders(),
@@ -82,8 +89,6 @@ export class HttpEngine extends AbstractEngine {
 		)
 			throw new ConnectionError("Unexpected response", httpResponse);
 
-		handleRpcResponse(this, response as WithId<RpcResponse> | RpcResponse);
-
 		return response as RpcResponse<TResult>;
 	}
 
@@ -101,11 +106,8 @@ export class HttpEngine extends AbstractEngine {
 
 		const jwt = this.state.token ? new Jwt(this.state.token) : undefined;
 
-		// if no token is set, do nothing
-		if (!jwt) return;
-
 		// if token is valid, do nothing
-		if (jwt.isValid()) return;
+		if (jwt?.isValid()) return;
 
 		if (auth.type === "token") {
 			this.state.token = auth.token;
@@ -130,7 +132,7 @@ export class HttpEngine extends AbstractEngine {
 			}
 		}
 
-		const response = await this.rpc<string>({
+		const response = await this.#rawRpc<string>({
 			method: "signin",
 			params: [payload],
 		});

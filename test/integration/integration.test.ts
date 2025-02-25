@@ -6,11 +6,10 @@ import { testVersion } from "./jobs/version.ts";
 import { cleanupDemoData } from "./utils.ts";
 
 const surrealize: Surrealize = new Surrealize(
-	new WebSocketEngine("ws://localhost:8000"),
-	{
+	new WebSocketEngine("ws://localhost:8000", {
 		namespace: "test",
 		database: "test",
-	},
+	}),
 );
 
 beforeAll(async () => {

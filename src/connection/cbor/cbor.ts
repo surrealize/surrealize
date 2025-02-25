@@ -1,9 +1,22 @@
 import { CborTag, type CborType, decodeCbor, encodeCbor } from "@std/cbor";
 
-import { tags } from "./tags.ts";
-import { CborCodec } from "./types.ts";
+export type CborTypeEncoder = (value: unknown) => CborType;
+export type CborTypeDecoder = <T = unknown>(value: CborType) => T;
 
-export class DefaultCborCodec extends CborCodec {
+export type TagCodec<TValue, TEncoded extends CborType> = {
+	tag: number;
+	isApplicable: (value: unknown) => value is TValue;
+	encode: (value: TValue, encode: CborTypeEncoder) => TEncoded;
+	decode: (value: TEncoded, decode: CborTypeDecoder) => TValue;
+};
+
+export class CborCodec {
+	tags: TagCodec<any, any>[];
+
+	constructor(customTags: TagCodec<any, any>[] = []) {
+		this.tags = customTags;
+	}
+
 	encode(value: unknown): Uint8Array {
 		return encodeCbor(this.#encodeType(value));
 	}
@@ -39,7 +52,7 @@ export class DefaultCborCodec extends CborCodec {
 		}
 
 		// custom types
-		const codec = tags.find((codec) => codec.isApplicable(value));
+		const codec = this.tags.find((codec) => codec.isApplicable(value));
 		if (codec)
 			return new CborTag(
 				codec.tag,
@@ -78,7 +91,7 @@ export class DefaultCborCodec extends CborCodec {
 		}
 
 		if (value instanceof CborTag) {
-			const codec = tags.find((codec) => codec.tag === value.tagNumber);
+			const codec = this.tags.find((codec) => codec.tag === value.tagNumber);
 			if (!codec) throw new Error("Unknown tag: " + value.tagNumber);
 
 			return codec.decode(value.tagContent, this.#decodeType.bind(this));

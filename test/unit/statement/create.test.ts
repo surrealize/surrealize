@@ -1,5 +1,5 @@
-import { describe, expect, test } from "bun:test";
-import { RecordId, Table, eq, q, surql } from "surrealize";
+import { describe, test } from "bun:test";
+import { Table, q, surql } from "surrealize";
 
 import { expectQueriesEquals } from "../../utils.ts";
 

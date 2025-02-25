@@ -1,5 +1,5 @@
 import { EventEmitter } from "../emitter.ts";
-import { ConnectionStatus } from "../engine.ts";
+import { type ConnectionState, ConnectionStatus } from "../engine.ts";
 import { ConnectionError } from "../error.ts";
 import { parseUint8Array } from "./bytes.ts";
 
@@ -106,11 +106,12 @@ export class WebSocketPool extends EventEmitter<WebSocketPoolEvents> {
 		}
 	}
 
-	send(
+	async send(
 		data: Uint8Array,
-		connection: WebSocketConnection | undefined = this.#getNextConnection(),
-	): void {
-		if (connection === undefined) throw new Error("No connection available");
+		connection: WebSocketConnection = this.#getNextConnection(),
+		preHook?: (connection: WebSocketConnection) => Promise<void> | void,
+	): Promise<void> {
+		if (preHook) await preHook(connection);
 		return connection.send(data);
 	}
 
@@ -118,7 +119,7 @@ export class WebSocketPool extends EventEmitter<WebSocketPoolEvents> {
 		return this.#pool.has(id);
 	}
 
-	#getNextConnection(): WebSocketConnection | undefined {
+	#getNextConnection(): WebSocketConnection {
 		while (this.#pool.size > 0) {
 			this.#lastId += 1;
 			if (this.#lastId > this.#options.size) this.#lastId = 0;
@@ -129,7 +130,7 @@ export class WebSocketPool extends EventEmitter<WebSocketPoolEvents> {
 			return connection;
 		}
 
-		return undefined;
+		throw new Error("No connection available");
 	}
 
 	async #createConnection(id: number) {
@@ -208,6 +209,8 @@ export class WebSocketConnection extends EventEmitter<{
 	message: [Uint8Array];
 }> {
 	readonly socket: WebSocket;
+
+	state: ConnectionState = {};
 
 	constructor(
 		readonly id: number,

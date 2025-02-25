@@ -1,6 +1,5 @@
 import { AbstractEngine } from "./connection/engine.ts";
 import { DatabaseError, QueryError } from "./connection/error.ts";
-import type { Auth } from "./connection/types.ts";
 import { surql } from "./query/query.ts";
 import type {
 	InferQueriesOutput,
@@ -17,10 +16,6 @@ import { RecordId } from "./type/recordid.ts";
 import { type TargetLike, resolveTarget } from "./type/target.ts";
 
 export type SurrealizeOptions = {
-	namespace?: string;
-	database?: string;
-	auth?: Auth;
-
 	/**
 	 * Set the connection as the default connection.
 	 *
