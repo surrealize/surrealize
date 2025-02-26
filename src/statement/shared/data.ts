@@ -25,10 +25,9 @@ export type ReplaceLike<TSchema extends SchemaContext> =
 		? InferInput<TSchema>
 		: Record<string, unknown>;
 
-export type SetLike<TSchema extends SchemaContext> = Record<
-	InputField<TSchema>,
-	unknown
->;
+export type SetLike<TSchema extends SchemaContext> = {
+	[Key in InputField<TSchema>]?: unknown;
+};
 
 export type UnsetLike<TSchema extends SchemaContext> = InputField<TSchema>[];
 

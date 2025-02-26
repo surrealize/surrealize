@@ -70,7 +70,7 @@ export class Repository<
 		where?: RepositoryWhere<TSchema>,
 		options?: RepositoryFindByOptions,
 	): Query<InferResult<TSchema>[]> {
-		return this.query({
+		return this.#query({
 			one: false,
 			where,
 			...options,
@@ -81,7 +81,7 @@ export class Repository<
 		where: RepositoryWhere<TSchema>,
 		options?: RepositoryFindOneByOptions,
 	): Query<InferResult<TSchema> | undefined> {
-		return this.query({
+		return this.#query({
 			one: true,
 			where,
 			...options,
@@ -133,7 +133,7 @@ export class Repository<
 		return this.q
 			.update(this.table)
 			.set(set)
-			.where(this.getWhereConditions(where))
+			.where(this.#getWhereConditions(where))
 			.toQuery()
 			.withSchema(asArraySchema(this.schema?.result)) as Query<
 			InferResult<TSchema>[]
@@ -164,7 +164,7 @@ export class Repository<
 		return this.q
 			.upsert(this.table)
 			.set(set)
-			.where(this.getWhereConditions(where))
+			.where(this.#getWhereConditions(where))
 			.toQuery()
 			.withSchema(asArraySchema(this.schema?.result)) as Query<
 			InferResult<TSchema>[]
@@ -183,7 +183,7 @@ export class Repository<
 	deleteBy(where: RepositoryWhere<TSchema>): Query<undefined> {
 		return this.q
 			.delete(this.table)
-			.where(this.getWhereConditions(where))
+			.where(this.#getWhereConditions(where))
 			.toQuery()
 			.withSchema(alwaysTo(undefined));
 	}
@@ -196,7 +196,7 @@ export class Repository<
 
 	// deleteMany() {}
 
-	private getWhereConditions(
+	#getWhereConditions(
 		where: RepositoryWhere<TSchema>,
 	): WhereCondition<TSchema>[] {
 		if (Array.isArray(where)) {
@@ -216,7 +216,7 @@ export class Repository<
 	 * @param options The options to use for the query.
 	 * @returns The query.
 	 */
-	private query<TOutput = InferResult<TSchema>>(
+	#query<TOutput = InferResult<TSchema>>(
 		options: RepositoryRawQueryOptions<TSchema, TOutput>,
 	): Query<TOutput> {
 		const baseQuery = options.one
@@ -224,7 +224,9 @@ export class Repository<
 			: this.q.select().from(options.target ?? this.table);
 
 		const query = baseQuery
-			.where(options.where ? this.getWhereConditions(options.where) : undefined)
+			.where(
+				options.where ? this.#getWhereConditions(options.where) : undefined,
+			)
 			.limit(options.one ? 1 : options.limit)
 			.start(options.start)
 			.timeout(options.timeout)
