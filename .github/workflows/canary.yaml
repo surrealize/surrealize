@@ -6,14 +6,14 @@ on:
       - main
 
 jobs:
-  test:
-    name: Test & Build
-    uses: ./.github/workflows/test.yaml
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yaml
 
   relrease_canary:
     name: Release (canary)
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [ci]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
