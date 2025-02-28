@@ -33,7 +33,6 @@ await Bun.write(
 				},
 			},
 
-			dependencies: packageJson.dependencies,
 			license: packageJson.license,
 			author: packageJson.author,
 			homepage: packageJson.homepage,
