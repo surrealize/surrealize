@@ -116,18 +116,18 @@ export class HttpEngine extends AbstractEngine {
 		let payload: {
 			user: string;
 			pass: string;
-			namespace?: string;
-			database?: string;
+			NS?: string;
+			DB?: string;
 		} = {
 			user: auth.username,
 			pass: auth.password,
 		};
 
 		if ("namespace" in auth) {
-			payload.namespace = auth.namespace;
+			payload.NS = auth.namespace;
 
 			if ("database" in auth) {
-				payload.database = auth.database;
+				payload.DB = auth.database;
 			}
 		}
 
