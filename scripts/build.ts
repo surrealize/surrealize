@@ -3,7 +3,9 @@ import { copyFile, rmdir } from "node:fs/promises";
 
 import packageJson from "../package.json" with { type: "json" };
 
-await rmdir(`${import.meta.dirname}/../dist`, { recursive: true });
+await rmdir(`${import.meta.dirname}/../dist`, { recursive: true }).catch(
+	() => undefined,
+);
 
 await Promise.all([
 	Bun.build({
