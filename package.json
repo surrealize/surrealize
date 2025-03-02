@@ -13,7 +13,7 @@
 	},
 	"dependencies": {
 		"@standard-schema/spec": "^1.0.0",
-		"@std/cbor": "npm:@jsr/std__cbor@^0.1.6"
+		"cbor2": "^1.12.0"
 	},
 	"devDependencies": {
 		"@std/semver": "npm:@jsr/std__semver@^1.0.4",

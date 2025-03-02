@@ -58,7 +58,7 @@ export class Surrealize {
 
 		const [result] = await this.query(query, bindings);
 
-		return (schema ? parseSchema(schema, result) : result) as TOutput;
+		return (schema ? await parseSchema(schema, result) : result) as TOutput;
 	}
 
 	async executeAll<const TQueries extends QueriesLike>(
@@ -80,10 +80,12 @@ export class Surrealize {
 
 		const results = await this.query(query, bindings);
 
-		return queries.map(({ schema }, index) => {
+		const parsedPromises = queries.map(async ({ schema }, index) => {
 			const queryResult = results[index];
-			return schema ? parseSchema(schema, queryResult) : queryResult;
-		}) as InferQueriesOutput<TQueries>;
+			return schema ? await parseSchema(schema, queryResult) : queryResult;
+		});
+
+		return Promise.all(parsedPromises) as Promise<InferQueriesOutput<TQueries>>;
 	}
 
 	/**

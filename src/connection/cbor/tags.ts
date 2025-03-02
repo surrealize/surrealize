@@ -1,9 +1,7 @@
-import type { CborType } from "@std/cbor";
-
 import { Duration } from "../../type/duration.ts";
 import { RecordId, type RecordIdValue } from "../../type/recordid.ts";
 import { Table } from "../../type/table.ts";
-import type { TagCodec } from "./cbor.ts";
+import type { CborType, TagCodec } from "./types.ts";
 
 export const TAG_NONE: TagCodec<undefined, null> = {
 	tag: 6,
