@@ -1,3 +1,5 @@
+export * from "./connection/cbor/cbor.ts";
+
 export {
 	HttpEngine,
 	type HttpEngineOptions,
