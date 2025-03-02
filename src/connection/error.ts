@@ -1,11 +1,16 @@
-import type { RpcResponseError } from "./types.ts";
+import type { RpcRequest, RpcResponseError } from "./types.ts";
 
 export class DatabaseError extends Error {
 	code: number;
+	request: RpcRequest;
 
-	constructor({ code, message }: RpcResponseError["error"]) {
+	constructor(
+		{ code, message }: RpcResponseError["error"],
+		request: RpcRequest,
+	) {
 		super(message);
 		this.code = code;
+		this.request = request;
 	}
 }
 

@@ -92,9 +92,10 @@ export class HttpEngine extends AbstractEngine {
 	}
 
 	async version(): Promise<string> {
-		const res = await this.rpc<string>({ method: "version", params: [] });
-		if (res.error) throw new DatabaseError(res.error);
-		return res.result;
+		const request: RpcRequest = { method: "version", params: [] };
+		const response = await this.rpc<string>({ method: "version", params: [] });
+		if (response.error) throw new DatabaseError(response.error, request);
+		return response.result;
 	}
 
 	async #checkToken(): Promise<void> {
@@ -131,12 +132,14 @@ export class HttpEngine extends AbstractEngine {
 			}
 		}
 
+		const request: RpcRequest = { method: "signin", params: [payload] };
+
 		const response = await this.#rawRpc<string>({
 			method: "signin",
 			params: [payload],
 		});
 
-		if (response.error) throw new DatabaseError(response.error);
+		if (response.error) throw new DatabaseError(response.error, request);
 
 		this.state.token = response.result;
 	}

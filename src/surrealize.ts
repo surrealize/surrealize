@@ -1,5 +1,6 @@
 import { AbstractEngine } from "./connection/engine.ts";
 import { DatabaseError, QueryError } from "./connection/error.ts";
+import type { RpcRequest } from "./connection/types.ts";
 import { surql } from "./query/query.ts";
 import type {
 	InferQueriesOutput,
@@ -111,12 +112,15 @@ export class Surrealize {
 		query: string,
 		bindings?: Record<string, unknown>,
 	): Promise<TResult> {
-		const response = await this.engine.rpc<
-			Array<{ result: unknown; status: "OK" | "ERR"; time: string }>
-		>({
+		const request: RpcRequest = {
 			method: "query",
 			params: [query, bindings],
-		});
+		};
+
+		const response =
+			await this.engine.rpc<
+				Array<{ result: unknown; status: "OK" | "ERR"; time: string }>
+			>(request);
 
 		if (response.result) {
 			const error = response.result.find((query) => query.status === "ERR");
@@ -124,7 +128,7 @@ export class Surrealize {
 
 			return response.result.map((query) => query.result) as TResult;
 		} else {
-			throw new DatabaseError(response.error);
+			throw new DatabaseError(response.error, request);
 		}
 	}
 }

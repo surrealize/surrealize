@@ -103,32 +103,31 @@ export class WebSocketEngine extends AbstractEngine {
 	}
 
 	async version(): Promise<string> {
-		const res = await this.rpc<string>({ method: "version", params: [] });
-		if (res.error) throw new DatabaseError(res.error);
-		return res.result;
+		const request: RpcRequest = { method: "version", params: [] };
+		const response = await this.rpc<string>(request);
+		if (response.error) throw new DatabaseError(response.error, request);
+		return response.result;
 	}
 
 	async #setupConnection(connection: WebSocketConnection): Promise<void> {
 		// if namespace or database is set, use it
 		if (this.options.namespace || this.options.database) {
-			const response = await this.#rawRpc(
-				{
-					method: "use",
-					params: [this.options.namespace, this.options.database],
-				},
-				connection,
-			);
-
-			if (response.error) throw new DatabaseError(response.error);
+			const request: RpcRequest = {
+				method: "use",
+				params: [this.options.namespace, this.options.database],
+			};
+			const response = await this.#rawRpc(request, connection);
+			if (response.error) throw new DatabaseError(response.error, request);
 		}
 
 		// authenticate if token is provided
 		if (this.state.token) {
-			const response = await this.#rawRpc(
-				{ method: "authenticate", params: [this.state.token] },
-				connection,
-			);
-			if (response.error) throw new DatabaseError(response.error);
+			const request: RpcRequest = {
+				method: "authenticate",
+				params: [this.state.token],
+			};
+			const response = await this.#rawRpc(request, connection);
+			if (response.error) throw new DatabaseError(response.error, request);
 		}
 
 		return;
@@ -175,7 +174,7 @@ export class WebSocketEngine extends AbstractEngine {
 
 		const response = await this.#rawRpc<string>(request, connection);
 
-		if (response.error) throw new DatabaseError(response.error);
+		if (response.error) throw new DatabaseError(response.error, request);
 
 		connection.state.token = response.result;
 	}
