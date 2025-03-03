@@ -22,7 +22,7 @@
 		"arktype": "^2.1.2",
 		"dayjs": "^1.11.13",
 		"dts-bundle-generator": "^9.5.1",
-		"prettier": "^3.5.2",
+		"prettier": "^3.5.3",
 		"typescript": "^5.8.2"
 	},
 	"exports": {

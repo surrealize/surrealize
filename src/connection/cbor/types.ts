@@ -1,4 +1,4 @@
-import { Tag } from "cbor2";
+import { Tag } from "cbor2/tag";
 
 export type CborPrimitiveType =
 	| undefined
