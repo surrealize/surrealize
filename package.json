@@ -12,17 +12,17 @@
 		"format": "bunx prettier --write ."
 	},
 	"dependencies": {
-		"@standard-schema/spec": "^1.0.0",
 		"cbor2": "^1.12.0"
 	},
 	"devDependencies": {
+		"@standard-schema/spec": "^1.0.0",
 		"@std/semver": "npm:@jsr/std__semver@^1.0.4",
 		"@trivago/prettier-plugin-sort-imports": "^5.2.2",
 		"@types/bun": "^1.2.4",
 		"arktype": "^2.1.2",
 		"dayjs": "^1.11.13",
-		"dts-bundle-generator": "^9.5.1",
 		"prettier": "^3.5.3",
+		"tsup": "^8.4.0",
 		"typescript": "^5.8.2"
 	},
 	"exports": {

@@ -1,44 +1,7 @@
-import { generateDtsBundle } from "dts-bundle-generator";
-import { copyFile, rmdir } from "node:fs/promises";
+import { copyFile } from "node:fs/promises";
+import { build } from "tsup";
 
 import packageJson from "../package.json" with { type: "json" };
-
-await rmdir(`${import.meta.dirname}/../dist`, { recursive: true }).catch(
-	() => undefined,
-);
-
-await Promise.all([
-	Bun.build({
-		entrypoints: [`${import.meta.dirname}/../src/index.ts`],
-		outdir: `${import.meta.dirname}/../dist`,
-		packages: "bundle",
-		format: "esm",
-		minify: true,
-		naming: {
-			entry: "index.js",
-		},
-	}),
-	Bun.build({
-		entrypoints: [`${import.meta.dirname}/../src/index.ts`],
-		outdir: `${import.meta.dirname}/../dist`,
-		packages: "bundle",
-		format: "cjs",
-		minify: true,
-		naming: {
-			entry: "index.cjs",
-		},
-	}),
-]);
-
-const [dts] = generateDtsBundle([
-	{
-		filePath: `${import.meta.dirname}/../src/index.ts`,
-		libraries: { inlinedLibraries: Object.keys(packageJson.dependencies) },
-		output: {
-			exportReferencedTypes: false,
-		},
-	},
-]);
 
 const packageJsonString = JSON.stringify(
 	{
@@ -65,8 +28,16 @@ const packageJsonString = JSON.stringify(
 	2,
 );
 
+await build({
+	entry: [`${import.meta.dirname}/../src/index.ts`],
+	outDir: `${import.meta.dirname}/../dist`,
+	format: ["esm", "cjs"],
+	minify: true,
+	clean: true,
+	dts: { resolve: true },
+});
+
 await Promise.all([
-	Bun.write(`${import.meta.dirname}/../dist/index.d.ts`, dts),
 	Bun.write(`${import.meta.dirname}/../dist/package.json`, packageJsonString),
 	copyFile(
 		`${import.meta.dirname}/../README.md`,
