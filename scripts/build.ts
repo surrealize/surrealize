@@ -17,6 +17,8 @@ const packageJsonString = JSON.stringify(
 			},
 		},
 
+		dependencies: packageJson.dependencies,
+
 		license: packageJson.license,
 		author: packageJson.author,
 		homepage: packageJson.homepage,
