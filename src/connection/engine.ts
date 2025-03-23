@@ -1,4 +1,4 @@
-import type { CborCodec } from "./cbor/cbor.ts";
+import { CborCodec } from "./cbor/cbor.ts";
 import { DefaultCborCodec } from "./cbor/default.ts";
 import { EventEmitter } from "./emitter.ts";
 import type { Auth, RpcRequest, RpcResponse, WithId } from "./types.ts";
