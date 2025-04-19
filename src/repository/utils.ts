@@ -23,13 +23,13 @@ import { flatten } from "../utils/flatten.ts";
  * @returns The array of conditions.
  */
 export const convertFilterObjectToConditions = (
-	filter: Record<string, unknown>,
+  filter: Record<string, unknown>,
 ): WhereCondition[] => {
-	const conditionEntries = Object.entries(flatten(filter));
-	const conditions = conditionEntries.map(([field, value]) =>
-		// use "equals strict" comparator
-		eqs(field, value),
-	);
+  const conditionEntries = Object.entries(flatten(filter));
+  const conditions = conditionEntries.map(([field, value]) =>
+    // use "equals strict" comparator
+    eqs(field, value),
+  );
 
-	return conditions;
+  return conditions;
 };

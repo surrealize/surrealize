@@ -9,53 +9,53 @@ import { upsert, upsertOnly } from "./statement/upsert.ts";
 import type { Surrealize } from "./surrealize.ts";
 
 const statements = {
-	create,
-	createOnly,
+  create,
+  createOnly,
 
-	delete: _delete,
-	deleteOnly,
+  delete: _delete,
+  deleteOnly,
 
-	select,
-	selectValue,
+  select,
+  selectValue,
 
-	update,
-	updateOnly,
+  update,
+  updateOnly,
 
-	upsert,
-	upsertOnly,
+  upsert,
+  upsertOnly,
 };
 
 export type DefaultBuilder<
-	TSchema extends SchemaContext = UnknownSchemaContext,
+  TSchema extends SchemaContext = UnknownSchemaContext,
 > = Builder<{
-	create: typeof create<TSchema>;
-	createOnly: typeof createOnly<TSchema>;
+  create: typeof create<TSchema>;
+  createOnly: typeof createOnly<TSchema>;
 
-	delete: typeof _delete<TSchema>;
-	deleteOnly: typeof deleteOnly<TSchema>;
+  delete: typeof _delete<TSchema>;
+  deleteOnly: typeof deleteOnly<TSchema>;
 
-	select: typeof select<TSchema>;
-	selectValue: typeof selectValue<TSchema>;
+  select: typeof select<TSchema>;
+  selectValue: typeof selectValue<TSchema>;
 
-	update: typeof update<TSchema>;
-	updateOnly: typeof updateOnly<TSchema>;
+  update: typeof update<TSchema>;
+  updateOnly: typeof updateOnly<TSchema>;
 
-	upsert: typeof upsert<TSchema>;
-	upsertOnly: typeof upsertOnly<TSchema>;
+  upsert: typeof upsert<TSchema>;
+  upsertOnly: typeof upsertOnly<TSchema>;
 }>;
 
 export const q: DefaultBuilder = createBuilder(new RawQuery(), {}, statements);
 
 export const createDefaultBuilder = <TSchema extends SchemaContext>(options?: {
-	schema?: TSchema;
-	connection?: Surrealize;
+  schema?: TSchema;
+  connection?: Surrealize;
 }): DefaultBuilder<TSchema> => {
-	return createBuilder(
-		new RawQuery(),
-		{
-			schema: options?.schema,
-			connection: options?.connection,
-		},
-		statements,
-	);
+  return createBuilder(
+    new RawQuery(),
+    {
+      schema: options?.schema,
+      connection: options?.connection,
+    },
+    statements,
+  );
 };

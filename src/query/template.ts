@@ -17,8 +17,8 @@ export type FormatVariableConverter = (value: unknown, index: number) => string;
  * @returns A tagged template.
  */
 export const tag = (
-	strings: string[] | TemplateStringsArray,
-	...values: unknown[]
+  strings: string[] | TemplateStringsArray,
+  ...values: unknown[]
 ): TaggedTemplate => [strings, values];
 
 /**
@@ -37,31 +37,31 @@ export const tagString = (str: string): TaggedTemplate => [[str], []];
  * @returns A merged tagged template.
  */
 export const merge = (tags: TaggedTemplate[], join = ""): TaggedTemplate => {
-	const strings: string[] = [];
-	const values: unknown[] = [];
+  const strings: string[] = [];
+  const values: unknown[] = [];
 
-	for (let i = 0; i < tags.length; i++) {
-		const tag = tags[i];
-		const [strings_, values_] = tag;
+  for (let i = 0; i < tags.length; i++) {
+    const tag = tags[i];
+    const [strings_, values_] = tag;
 
-		for (let j = 0; j < strings_.length; j++) {
-			const str = strings_[j];
-			const val = values_[j];
+    for (let j = 0; j < strings_.length; j++) {
+      const str = strings_[j];
+      const val = values_[j];
 
-			if (i > 0 && j === 0) {
-				strings[strings.length - 1] += join + str;
-			} else {
-				strings.push(str);
-			}
+      if (i > 0 && j === 0) {
+        strings[strings.length - 1] += join + str;
+      } else {
+        strings.push(str);
+      }
 
-			// if not last
-			if (j !== values_.length) {
-				values.push(val);
-			}
-		}
-	}
+      // if not last
+      if (j !== values_.length) {
+        values.push(val);
+      }
+    }
+  }
 
-	return [strings, values];
+  return [strings, values];
 };
 
 /**
@@ -72,15 +72,15 @@ export const merge = (tags: TaggedTemplate[], join = ""): TaggedTemplate => {
  * @returns The formatted string.
  */
 export const format = (
-	tag: TaggedTemplate,
-	variableConverter: FormatVariableConverter = (v) => String(v),
+  tag: TaggedTemplate,
+  variableConverter: FormatVariableConverter = (v) => String(v),
 ): string => {
-	const [strings, values] = tag;
-	return strings.reduce(
-		(acc, str, i) =>
-			acc + str + (i in values ? variableConverter(values[i], i) : ""),
-		"",
-	);
+  const [strings, values] = tag;
+  return strings.reduce(
+    (acc, str, i) =>
+      acc + str + (i in values ? variableConverter(values[i], i) : ""),
+    "",
+  );
 };
 
 /**
@@ -92,16 +92,16 @@ export const format = (
  * @returns True if the template is empty, false otherwise.
  */
 export const isEmpty = (template: TaggedTemplate): boolean => {
-	const [strings, values] = template;
+  const [strings, values] = template;
 
-	// if there are values, the template is never empty
-	if (values.length !== 0) return false;
+  // if there are values, the template is never empty
+  if (values.length !== 0) return false;
 
-	// if there are no strings, the template is empty
-	if (strings.length === 0) return true;
+  // if there are no strings, the template is empty
+  if (strings.length === 0) return true;
 
-	// if there is only one empty string, the template is empty
-	if (strings.length === 1 && strings[0] === "") return true;
+  // if there is only one empty string, the template is empty
+  if (strings.length === 1 && strings[0] === "") return true;
 
-	return false;
+  return false;
 };

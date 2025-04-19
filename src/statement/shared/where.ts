@@ -1,86 +1,86 @@
 import {
-	type TaggedTemplate,
-	merge,
-	tag,
-	tagString,
+  type TaggedTemplate,
+  merge,
+  tag,
+  tagString,
 } from "../../query/template.ts";
 import { type Field, enforceField } from "../../query/validation/field.ts";
 import type {
-	SchemaContext,
-	UnknownSchemaContext,
+  SchemaContext,
+  UnknownSchemaContext,
 } from "../../schema/context.ts";
 
 export type WhereState = {
-	conditions: WhereCondition[];
+  conditions: WhereCondition[];
 };
 
 export type CompareOperator =
-	| "=" /* equals */
-	| "!=" /* not equals */
-	| "==" /* strict equals */
-	| "~" /* like / fuzzy equals */
-	| "!~" /* not like / fuzzy equals */
-	| "<" /* less than */
-	| "<=" /* less than or equal */
-	| ">" /* greater than */
-	| ">=" /* greater than or equal */;
+  | "=" /* equals */
+  | "!=" /* not equals */
+  | "==" /* strict equals */
+  | "~" /* like / fuzzy equals */
+  | "!~" /* not like / fuzzy equals */
+  | "<" /* less than */
+  | "<=" /* less than or equal */
+  | ">" /* greater than */
+  | ">=" /* greater than or equal */;
 
 export type WhereCondition<
-	TSchema extends SchemaContext = UnknownSchemaContext,
+  TSchema extends SchemaContext = UnknownSchemaContext,
 > = WhereCompare<Field<TSchema>> | WhereAnd<TSchema> | WhereOr<TSchema>;
 
 export type WhereCompare<
-	TField extends string = string,
-	TOperator extends CompareOperator = CompareOperator,
-	TValue = unknown,
+  TField extends string = string,
+  TOperator extends CompareOperator = CompareOperator,
+  TValue = unknown,
 > = { type: "cmp"; field: TField; operator: TOperator; value: TValue };
 
 export type WhereAnd<TSchema extends SchemaContext = UnknownSchemaContext> = {
-	type: "and";
-	conditions: WhereCondition<TSchema>[];
+  type: "and";
+  conditions: WhereCondition<TSchema>[];
 };
 export type WhereOr<TSchema extends SchemaContext = UnknownSchemaContext> = {
-	type: "or";
-	conditions: WhereCondition<TSchema>[];
+  type: "or";
+  conditions: WhereCondition<TSchema>[];
 };
 
 export const buildWhere = (
-	conditions?: WhereCondition[],
+  conditions?: WhereCondition[],
 ): TaggedTemplate | undefined => {
-	// return an empty string if there are no conditions
-	if (!conditions || conditions.length === 0) return;
+  // return an empty string if there are no conditions
+  if (!conditions || conditions.length === 0) return;
 
-	return merge([tag`WHERE`, formatCondition(and(...conditions))], " ");
+  return merge([tag`WHERE`, formatCondition(and(...conditions))], " ");
 };
 
 const formatCondition = (condition: WhereCondition): TaggedTemplate => {
-	switch (condition.type) {
-		case "cmp":
-			return merge(
-				[
-					tagString(`${enforceField(condition.field)} ${condition.operator}`),
-					tag`${condition.value}`,
-				],
-				" ",
-			);
+  switch (condition.type) {
+    case "cmp":
+      return merge(
+        [
+          tagString(`${enforceField(condition.field)} ${condition.operator}`),
+          tag`${condition.value}`,
+        ],
+        " ",
+      );
 
-		case "and":
-			return merge([
-				tagString("("),
-				merge(condition.conditions.map(formatCondition), " && "),
-				tagString(")"),
-			]);
+    case "and":
+      return merge([
+        tagString("("),
+        merge(condition.conditions.map(formatCondition), " && "),
+        tagString(")"),
+      ]);
 
-		case "or":
-			return merge([
-				tagString("("),
-				merge(condition.conditions.map(formatCondition), " || "),
-				tagString(")"),
-			]);
+    case "or":
+      return merge([
+        tagString("("),
+        merge(condition.conditions.map(formatCondition), " || "),
+        tagString(")"),
+      ]);
 
-		default:
-			throw new Error("Invalid condition");
-	}
+    default:
+      throw new Error("Invalid condition");
+  }
 };
 
 /**
@@ -90,9 +90,9 @@ const formatCondition = (condition: WhereCondition): TaggedTemplate => {
  * @returns The `AND` condition.
  */
 export const and = <TSchema extends SchemaContext = UnknownSchemaContext>(
-	...conditions: WhereCondition<TSchema>[]
+  ...conditions: WhereCondition<TSchema>[]
 ): WhereAnd<TSchema> => {
-	return { type: "and", conditions };
+  return { type: "and", conditions };
 };
 
 /**
@@ -102,9 +102,9 @@ export const and = <TSchema extends SchemaContext = UnknownSchemaContext>(
  * @returns The `OR` condition.
  */
 export const or = <TSchema extends SchemaContext = UnknownSchemaContext>(
-	...conditions: WhereCondition<TSchema>[]
+  ...conditions: WhereCondition<TSchema>[]
 ): WhereOr<TSchema> => {
-	return { type: "or", conditions };
+  return { type: "or", conditions };
 };
 
 /**
@@ -116,18 +116,18 @@ export const or = <TSchema extends SchemaContext = UnknownSchemaContext>(
  * @returns The comparator.
  */
 export const cmp = <
-	TField extends string,
-	TOperator extends CompareOperator,
-	TValue,
+  TField extends string,
+  TOperator extends CompareOperator,
+  TValue,
 >(
-	field: TField,
-	operator: TOperator,
-	value: TValue,
+  field: TField,
+  operator: TOperator,
+  value: TValue,
 ): WhereCompare<TField, TOperator, TValue> => ({
-	type: "cmp",
-	field,
-	operator,
-	value,
+  type: "cmp",
+  field,
+  operator,
+  value,
 });
 
 /**
@@ -138,8 +138,8 @@ export const cmp = <
  * @returns The comparator.
  */
 export const eq = <TField extends string, TValue>(
-	field: TField,
-	value: TValue,
+  field: TField,
+  value: TValue,
 ): WhereCompare<TField, "=", TValue> => cmp(field, "=", value);
 
 /**
@@ -150,8 +150,8 @@ export const eq = <TField extends string, TValue>(
  * @returns The comparator.
  */
 export const neq = <TField extends string, TValue>(
-	field: TField,
-	value: TValue,
+  field: TField,
+  value: TValue,
 ): WhereCompare<TField, "!=", TValue> => cmp(field, "!=", value);
 
 /**
@@ -162,8 +162,8 @@ export const neq = <TField extends string, TValue>(
  * @returns The comparator.
  */
 export const eqs = <TField extends string, TValue>(
-	field: TField,
-	value: TValue,
+  field: TField,
+  value: TValue,
 ): WhereCompare<TField, "==", TValue> => cmp(field, "==", value);
 
 /**
@@ -174,8 +174,8 @@ export const eqs = <TField extends string, TValue>(
  * @returns The comparator.
  */
 export const gt = <TField extends string, TValue>(
-	field: TField,
-	value: TValue,
+  field: TField,
+  value: TValue,
 ): WhereCompare<TField, ">", TValue> => cmp(field, ">", value);
 
 /**
@@ -186,8 +186,8 @@ export const gt = <TField extends string, TValue>(
  * @returns The comparator.
  */
 export const gte = <TField extends string, TValue>(
-	field: TField,
-	value: TValue,
+  field: TField,
+  value: TValue,
 ): WhereCompare<TField, ">=", TValue> => cmp(field, ">=", value);
 
 /**
@@ -198,8 +198,8 @@ export const gte = <TField extends string, TValue>(
  * @returns The comparator.
  */
 export const lt = <TField extends string, TValue>(
-	field: TField,
-	value: TValue,
+  field: TField,
+  value: TValue,
 ): WhereCompare<TField, "<", TValue> => cmp(field, "<", value);
 
 /**
@@ -210,6 +210,6 @@ export const lt = <TField extends string, TValue>(
  * @returns The comparator.
  */
 export const lte = <TField extends string, TValue>(
-	field: TField,
-	value: TValue,
+  field: TField,
+  value: TValue,
 ): WhereCompare<TField, "<=", TValue> => cmp(field, "<=", value);

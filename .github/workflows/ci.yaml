@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - "**"
-      - "!next"
       - "!main"
   workflow_call:
 
@@ -13,14 +12,27 @@ jobs:
     name: Test & Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - uses: surrealdb/setup-surreal@v2
+          
+      - name: Setup SurrealDB
+        uses: surrealdb/setup-surreal@v2
         with:
           surrealdb_auth: false
-      - run: bun install --frozen-lockfile
-      - run: bun run check
-      - run: bun test
-      - run: bun run build
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint & Format
+        run: bun biome ci
+
+      - name: Test
+        run: bun test
+        
+      - name: Build
+        run: bun run ./build.ts

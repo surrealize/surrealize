@@ -6,36 +6,36 @@ import { testVersion } from "./jobs/version.ts";
 import { cleanupDemoData } from "./utils.ts";
 
 const surrealize: Surrealize = new Surrealize(
-	new WebSocketEngine("ws://localhost:8000", {
-		namespace: "test",
-		database: "test",
-	}),
+  new WebSocketEngine("ws://localhost:8000", {
+    namespace: "test",
+    database: "test",
+  }),
 );
 
 beforeAll(async () => {
-	await surrealize.connect();
+  await surrealize.connect();
 });
 
 afterEach(async () => {
-	await cleanupDemoData(surrealize);
+  await cleanupDemoData(surrealize);
 });
 
 describe("Integration", () => {
-	test("connection", async () => {
-		const random = Math.floor(Math.random() * 100);
-		const result = await surrealize.execute(surql`RETURN ${random}`);
+  test("connection", async () => {
+    const random = Math.floor(Math.random() * 100);
+    const result = await surrealize.execute(surql`RETURN ${random}`);
 
-		expect(result).toEqual(random);
-	});
+    expect(result).toEqual(random);
+  });
 
-	test("version", () => testVersion(surrealize));
+  test("version", () => testVersion(surrealize));
 
-	test("select from where", () => testSelectWhere(surrealize));
+  test("select from where", () => testSelectWhere(surrealize));
 
-	test("select from only", () => testSelectOnly(surrealize));
+  test("select from only", () => testSelectOnly(surrealize));
 
-	test("None and Null", async () => {
-		expect(await surrealize.execute(surql`RETURN NONE`)).toEqual(undefined);
-		expect(await surrealize.execute(surql`RETURN NULL`)).toEqual(null);
-	});
+  test("None and Null", async () => {
+    expect(await surrealize.execute(surql`RETURN NONE`)).toEqual(undefined);
+    expect(await surrealize.execute(surql`RETURN NULL`)).toEqual(null);
+  });
 });

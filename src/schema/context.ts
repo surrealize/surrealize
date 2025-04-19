@@ -11,15 +11,15 @@ import type { StandardSchema } from "./standard.ts";
  * or where conditions.
  */
 export type SchemaContext<TResult = unknown, TInput = TResult> = {
-	result: StandardSchema<unknown, TResult>;
-	input?: TInput;
+  result: StandardSchema<unknown, TResult>;
+  input?: TInput;
 };
 
 export type InferResult<TContext extends SchemaContext> =
-	TContext extends SchemaContext<infer TResult, infer _> ? TResult : never;
+  TContext extends SchemaContext<infer TResult, infer _> ? TResult : never;
 
 export type InferInput<TContext extends SchemaContext> =
-	TContext extends SchemaContext<infer _, infer TInput> ? TInput : never;
+  TContext extends SchemaContext<infer _, infer TInput> ? TInput : never;
 
 // --- Common schema types ---
 

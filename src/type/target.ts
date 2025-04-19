@@ -22,8 +22,8 @@ import { Table, type TableLike } from "./table.ts";
  * ```
  */
 export type TargetLike<
-	TTable extends string = string,
-	TId extends RecordIdValue | never = RecordIdValue | never,
+  TTable extends string = string,
+  TId extends RecordIdValue | never = RecordIdValue | never,
 > = TableLike<TTable> | RecordIdLike<TTable, TId>;
 
 /**
@@ -32,11 +32,11 @@ export type TargetLike<
  * This is the return type of the {@link resolveTarget} function.
  */
 export type ResolvedTarget<TTarget extends TargetLike> =
-	TTarget extends RecordIdLike<infer TTable, infer TId>
-		? RecordId<TTable, TId>
-		: TTarget extends TableLike<infer TTable>
-			? Table<TTable>
-			: never;
+  TTarget extends RecordIdLike<infer TTable, infer TId>
+    ? RecordId<TTable, TId>
+    : TTarget extends TableLike<infer TTable>
+      ? Table<TTable>
+      : never;
 
 /**
  * Resolves a target and returns either a record id or a table depending on the target.
@@ -45,22 +45,22 @@ export type ResolvedTarget<TTarget extends TargetLike> =
  * @returns The resolved target (either a record id or a table).
  */
 export const resolveTarget = <TTarget extends TargetLike>(
-	target: TTarget,
+  target: TTarget,
 ): ResolvedTarget<TTarget> => {
-	if (target instanceof RecordId)
-		return target as unknown as ResolvedTarget<TTarget>;
+  if (target instanceof RecordId)
+    return target as unknown as ResolvedTarget<TTarget>;
 
-	if (target instanceof Table)
-		return target as unknown as ResolvedTarget<TTarget>;
+  if (target instanceof Table)
+    return target as unknown as ResolvedTarget<TTarget>;
 
-	if (typeof target === "string") {
-		if (target.includes(":")) {
-			const [table, id] = target.split(":");
-			return new RecordId(table, id) as ResolvedTarget<TTarget>;
-		}
+  if (typeof target === "string") {
+    if (target.includes(":")) {
+      const [table, id] = target.split(":");
+      return new RecordId(table, id) as ResolvedTarget<TTarget>;
+    }
 
-		return new Table(target) as unknown as ResolvedTarget<TTarget>;
-	}
+    return new Table(target) as unknown as ResolvedTarget<TTarget>;
+  }
 
-	throw new Error("Invalid target");
+  throw new Error("Invalid target");
 };

@@ -1,16 +1,18 @@
 export class Incrementor {
-	#counter: number = -1;
+  #counter = -1;
 
-	nextNumber(): number {
-		return (this.#counter =
-			this.#counter >= Number.MAX_SAFE_INTEGER ? 0 : this.#counter + 1);
-	}
+  nextNumber(): number {
+    this.#counter =
+      this.#counter >= Number.MAX_SAFE_INTEGER ? 0 : this.#counter + 1;
 
-	nextString(): string {
-		return this.nextNumber().toString();
-	}
+    return this.#counter;
+  }
 
-	reset(): void {
-		this.#counter = -1;
-	}
+  nextString(): string {
+    return this.nextNumber().toString();
+  }
+
+  reset(): void {
+    this.#counter = -1;
+  }
 }
