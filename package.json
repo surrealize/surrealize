@@ -1,6 +1,6 @@
 {
   "name": "surrealize",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Surrealize is a query builder and ORM for SurrealDB.",
   "type": "module",
   "dependencies": {
@@ -32,5 +32,12 @@
   "bugs": {
     "url": "https://github.com/surrealize/surrealize/issues"
   },
-  "keywords": ["surrealdb", "typescript", "orm", "query", "builder", "database"]
+  "keywords": [
+    "surrealdb",
+    "typescript",
+    "orm",
+    "query",
+    "builder",
+    "database"
+  ]
 }
