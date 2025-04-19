@@ -1,3 +1,5 @@
+name: Release
+
 on:
   push:
     branches:
@@ -6,34 +8,55 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  packages: write
+  id-token: write
 
 jobs:
-  release:
+  release_main:
+    name: Build & Release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - run: bun install --frozen-lockfile
-      - run: bun run check
-      - run: bun test
-      - run: bun run build
-      - name: Setup npm
+
+      - name: Setup SurrealDB
+        uses: surrealdb/setup-surreal@v2
+        with:
+          surrealdb_auth: false
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint & Format
+        run: bun biome ci
+
+      - name: Test
+        run: bun test
+
+      - name: Build
+        run: bun run ./build.ts
+
+      - name: Release please
+        uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          manifest-file: .release-manifest.json
+          config-file: release.json
+
+      - name: Setup NPM
+        if: ${{ steps.release.outputs.release_created }}
         env:
-          NPM_REGISTRY: registry.npmjs.com
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          npm config set registry https://$NPM_REGISTRY
-          npm config set //$NPM_REGISTRY/:_authToken $NPM_TOKEN
-      - name: Create release
-        uses: changesets/action@v1
-        with:
-          publish: bun run release
-          commit: "chore: release"
-          title: "chore: release"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_REGISTRY_URL: https://registry.npmjs.com/
+          npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          npm config set registry=https://registry.npmjs.org/
+
+      - name: Publish to npm
+        if: ${{ steps.release.outputs.release_created }}
+        working-directory: dist
+        run: npm publish --access public --provenance
